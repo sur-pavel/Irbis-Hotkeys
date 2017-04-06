@@ -81,10 +81,15 @@ Func Obrzv()
 			ControlClick($glW, "", "[CLASS:TButton; INSTANCE:5]")
 		EndIf
 
-		$gWnd = WinWaitActive("Глобальная корректировка БД MPDA", "", 1)
+		$gWnd = WinWaitActive("Глобальная корректировка БД MPDA", "", 5)
 		If $gWnd Then
 			Sleep(300)
 			ControlClick("Глобальная корректировка БД MPDA", "", "[CLASS:TBitBtn; INSTANCE:3]")
+		EndIf
+				$gWnd = WinWaitActive("Глобальная корректировка БД DST", "", 5)
+		If $gWnd Then
+			Sleep(300)
+			ControlClick("Глобальная корректировка БД DST", "", "[CLASS:TBitBtn; INSTANCE:3]")
 		EndIf
 
 
@@ -1125,7 +1130,7 @@ Func CohSearch()
 	EndIf
 EndFunc   ;==>CohSearch
 
-;						CTRL+W Печать основной карточки. Открытие существующего файла (путь: c:\irbiswrk\) или создание нового.
+;						CTRL+W Печать основной карточки
 Func Osn()
 
 
@@ -1142,8 +1147,38 @@ Func Osn()
 		Send("{CTRLDOWN}")
 		Sleep(10)
 		Send("{CTRLUP}")
+		;**** Проверка на наличие автора
+		$autorExM = 0
+		$autorEx = 0
+		;**** в многотомнике
+		_WinAPI_SetKeyboardLayout(WinGetHandle(AutoItWinGetTitle()), 0x0409)
+		Send("!q" & 961 & "{ENTER}")
+		$hWnd = WinWaitActive("ОШИБКА", "", 1)
+		If $hWnd Then
+			WinClose("ОШИБКА")
+		Else
+			$wText = WinGetText($IrbisTit)
+			$autorExM = StringInStr($wText, "ДА")
+			If $autorExM > 0 Then
+				$autorExM = 1
+			Else
+				$autorExM = 2
+			EndIf
+		EndIf
 
-		;**** Получение инв. номера
+		;**** в однотомнике
+
+		Send("!q" & 700 & "{ENTER}")
+		$wText = WinGetText($IrbisTit)
+		$autorEx = StringInStr($wText, "A")
+
+		If $autorEx > 0 Then
+			$autorEx = 1
+		Else
+			$autorEx = 0
+		EndIf
+
+
 		Send("!q" & 910 & "{ENTER}")
 		$text = WinGetText($IrbisTit, "")
 		$pos1 = StringInStr($text, "^B", 0, 1) + 2
@@ -1151,84 +1186,36 @@ Func Osn()
 		$invNumLen = $pos2 - $pos1
 		$invNum = (StringMid($text, $pos1, $invNumLen))
 
-		;**** Открытие существующего файла
-		$filePath = "c:\irbiswrk\" & $invNum & ".RTF"
-		$SecondfilePath = "c:\irbiswrk\Сделаны\" & $invNum & ".RTF"
-		If FileExists($filePath) Then
-			Local $oWord = _Word_Create()
-			_Word_DocOpen($oWord, $filePath)
-			Local $hWnd = WinWait("[CLASS:OpusApp]", "", 10)
-			WinActivate($hWnd)
-		ElseIf FileExists($SecondfilePath) Then
-			Local $oWord = _Word_Create()
-			_Word_DocOpen($oWord, $SecondfilePath)
-			Local $hWnd = WinWait("[CLASS:OpusApp]", "", 10)
-			WinActivate($hWnd)
+		ControlClick($IrbisTit, "", "[CLASS:TToolBar; INSTANCE:1]", "left", 1, 34, 12)
+		$hWnd = WinWaitActive("Печать", "", 5)
+		If $hWnd Then
+			ControlSend("Печать", "", "[CLASS:THSHintComboBox; INSTANCE:1]", "{HOME}" & "{DOWN 7}")
+			Sleep(200)
+			ControlClick("Печать", "", "[CLASS:TBitBtn; INSTANCE:2]", "left", 2)
+		EndIf
+		$hWnd = WinWaitActive("Файл", "", 5)
+		If $hWnd Then
+			ControlSend("Файл", "", "[CLASS:Edit; INSTANCE:1]", $invNum)
+			Send("{TAB 2}" & "{ENTER}")
+		EndIf
+		$hWnd = WinWaitActive("Внимание", "", 5)
+		If $hWnd Then
+			ControlClick("Внимание", "", "[CLASS:Button; INSTANCE:1]")
+		EndIf
+		$hWnd = WinWaitActive("[CLASS:OpusApp]", "", 5)
+		If $hWnd Then
+			WinClose("Печать текущего")
+			$Object = ObjGet("", "Word.Application")
+
+			If $autorExM = 2 And $autorEx = 1 Then
+				$Object.Run("Макрос2")
+			ElseIf $autorExM = 1 Or $autorEx = 1 Then
+				$Object.Run("Макрос1")
+			Else
+				$Object.Run("Макрос2")
+			EndIf
+
 		Else
-
-
-			;**** Проверка на наличие автора
-			$autorExM = 0
-			$autorEx = 0
-			;**** в многотомнике
-			_WinAPI_SetKeyboardLayout(WinGetHandle(AutoItWinGetTitle()), 0x0409)
-			Send("!q" & 961 & "{ENTER}")
-			$hWnd = WinWaitActive("ОШИБКА", "", 1)
-			If $hWnd Then
-				WinClose("ОШИБКА")
-			Else
-				$wText = WinGetText($IrbisTit)
-				$autorExM = StringInStr($wText, "ДА")
-				If $autorExM > 0 Then
-					$autorExM = 1
-				Else
-					$autorExM = 2
-				EndIf
-			EndIf
-
-			;**** в однотомнике
-
-			Send("!q" & 700 & "{ENTER}")
-			$wText = WinGetText($IrbisTit)
-			$autorEx = StringInStr($wText, "A")
-
-			If $autorEx > 0 Then
-				$autorEx = 1
-			Else
-				$autorEx = 0
-			EndIf
-
-			ControlClick($IrbisTit, "", "[CLASS:TToolBar; INSTANCE:1]", "left", 1, 34, 12)
-			$hWnd = WinWaitActive("Печать", "", 5)
-			If $hWnd Then
-				ControlSend("Печать", "", "[CLASS:THSHintComboBox; INSTANCE:1]", "{HOME}" & "{DOWN 7}")
-				Sleep(200)
-				ControlClick("Печать", "", "[CLASS:TBitBtn; INSTANCE:2]", "left", 2)
-			EndIf
-			$hWnd = WinWaitActive("Файл", "", 5)
-			If $hWnd Then
-				ControlSend("Файл", "", "[CLASS:Edit; INSTANCE:1]", $invNum)
-				Send("{TAB 2}" & "{ENTER}")
-			EndIf
-			$hWnd = WinWaitActive("Внимание", "", 5)
-			If $hWnd Then
-				ControlClick("Внимание", "", "[CLASS:Button; INSTANCE:1]")
-			EndIf
-			$hWnd = WinWaitActive("[CLASS:OpusApp]", "", 5)
-			If $hWnd Then
-				WinClose("Печать текущего")
-				$Object = ObjGet("", "Word.Application")
-
-				If $autorExM = 2 And $autorEx = 1 Then
-					$Object.Run("Макрос2")
-				ElseIf $autorExM = 1 Or $autorEx = 1 Then
-					$Object.Run("Макрос1")
-				Else
-					$Object.Run("Макрос2")
-				EndIf
-
-			Else
-			EndIf
 		EndIf
 
 	EndIf

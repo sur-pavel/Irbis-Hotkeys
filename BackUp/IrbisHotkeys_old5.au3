@@ -1125,7 +1125,7 @@ Func CohSearch()
 	EndIf
 EndFunc   ;==>CohSearch
 
-;						CTRL+W Печать основной карточки. Открытие существующего файла (путь: c:\irbiswrk\) или создание нового.
+;						CTRL+W Печать основной карточки. Открытие существующего файла или создание нового.
 Func Osn()
 
 
@@ -1153,15 +1153,15 @@ Func Osn()
 
 		;**** Открытие существующего файла
 		$filePath = "c:\irbiswrk\" & $invNum & ".RTF"
-		$SecondfilePath = "c:\irbiswrk\Сделаны\" & $invNum & ".RTF"
+		$filePath2 = "c:\irbiswrk\Сделаны" & $invNum & ".RTF"
 		If FileExists($filePath) Then
 			Local $oWord = _Word_Create()
 			_Word_DocOpen($oWord, $filePath)
 			Local $hWnd = WinWait("[CLASS:OpusApp]", "", 10)
 			WinActivate($hWnd)
-		ElseIf FileExists($SecondfilePath) Then
+			ElseIf FileExists($filePath2) Then
 			Local $oWord = _Word_Create()
-			_Word_DocOpen($oWord, $SecondfilePath)
+			_Word_DocOpen($oWord, $filePath)
 			Local $hWnd = WinWait("[CLASS:OpusApp]", "", 10)
 			WinActivate($hWnd)
 		Else
