@@ -7,6 +7,8 @@
 #include <Misc.au3>
 #include <Date.au3>
 #include <MsgBoxConstants.au3>
+#include <Excel.au3>
+
 
 ;
 ;
@@ -27,10 +29,12 @@ HotKeySet("^d", "Formular")
 HotKeySet("^y", "Label")
 HotKeySet("^m", "FormularLabel")
 HotKeySet("^{F8}", "OnTop")
+
 HotKeySet("^{F9}", "OnTopOff")
 HotKeySet("^+g", "Obrzv")
 HotKeySet("^{F12}", "ScrExit")
 HotKeySet("^{SPACE}", "ViewFocus")
+
 
 $IrbisTit = 'ИРБИС64 - АРМ "Каталогизатор"'
 
@@ -53,12 +57,34 @@ EndFunc   ;==>ScrExit
 Func Obrzv()
 	$wTit = WinGetTitle("[ACTIVE]")
 	$isIrbis = StringInStr($wTit, $IrbisTit)
+	$SPA = StringInStr($wTit, "СПА")
 	If $isIrbis = 0 Then
 		HotKeySet("^+g")
 		Send("^+g")
 		HotKeySet("^+g", "Obrzv")
-	Else
+	ElseIf $SPA <> 0 Then
+		;**** Этап работы
+		ControlClick($IrbisTit, "", "[CLASS:TToolBar; INSTANCE:1]", "left", 1, 176, 13)
+		$hWnd = WinWaitActive("Установка личных параметров", "", 5)
+		If $hWnd Then
+			WinMove("Установка личных параметров", "", 594, 295, 472, 310)
+			ControlClick("Установка личных параметров", "", "[CLASS:TStringGrid; INSTANCE:1]", "left", 1, 347, 30)
+			Send("{F2}")
+			$hWnd1 = WinWaitActive('"Этап работы"', "", 5)
+			If $hWnd1 Then
+				Sleep(100)
+				Send("{END}{PGUP}{UP 4}{ENTER}")
+			EndIf
+			$hWnd = WinWaitActive("Установка личных параметров", "", 5)
+			If $hWnd Then
+				Send("{TAB}{ENTER}")
+			EndIf
+		EndIf
+		;**** корректировка
 		$glW = "Глобальная корректировка БД"
+		$hWnd = WinWaitActive($IrbisTit, "", 5)
+		If $hWnd Then
+		Sleep(100)
 		ControlClick($IrbisTit, "", "[CLASS:TToolBar; INSTANCE:4]", "left", 1, 323, 11)
 		$gWnd = WinWaitActive($glW, "", 5)
 		If Not $gWnd Then
@@ -85,6 +111,7 @@ Func Obrzv()
 		If $gWnd Then
 			Sleep(300)
 			ControlClick("Глобальная корректировка БД MPDA", "", "[CLASS:TBitBtn; INSTANCE:3]")
+		EndIf
 		EndIf
 
 
@@ -231,7 +258,9 @@ Func Field()
 				Send("!q" & $input & "{ENTER}")
 			Else
 				; Открытие записи в Ирбисе по инв. номеру, если цифр в числе больше 3
-				Send("!f" & "инв" & "{ENTER}")
+				Send("!f")
+				Sleep(100)
+				Send("инв" & "{ENTER}")
 				Sleep(100)
 				Send("!d" & $input & "{ENTER}")
 			EndIf
@@ -246,6 +275,99 @@ Func Field()
 
 					Case "" ; Пустая строка - закрытие окна
 						ExitLoop
+					Case "уо"
+						$wTit = WinGetTitle("[ACTIVE]")
+						$SPA = StringInStr($wTit, "СПА")
+						If $SPA <> 0 Then
+							Send("!q" & 910 & "{ENTER}" & "{F2}")
+							$hWnd = WinWaitActive('Элемент: "910', "", 5)
+							If $hWnd Then
+								Send("{DOWN 3}")
+								Sleep(100)
+								Send("+{END}" & "У0-к" & "{TAB}" & "{ENTER}")
+								Sleep(300)
+								Send("+{ENTER}")
+							EndIf
+						EndIf
+					Case "прк" ; "прк" - этап работы ПРК
+						ControlClick($IrbisTit, "", "[CLASS:TToolBar; INSTANCE:1]", "left", 1, 176, 13)
+						$hWnd = WinWaitActive("Установка личных параметров", "", 5)
+						If $hWnd Then
+							WinMove("Установка личных параметров", "", 594, 295, 472, 310)
+							ControlClick("Установка личных параметров", "", "[CLASS:TStringGrid; INSTANCE:1]", "left", 1, 347, 30)
+							Send("{F2}")
+							$hWnd1 = WinWaitActive('"Этап работы"', "", 5)
+							If $hWnd1 Then
+								Send("{HOME}{PGDN}{DOWN 2}{ENTER}")
+							EndIf
+							If $hWnd Then
+								Send("{TAB}{ENTER}")
+							EndIf
+						EndIf
+
+					Case "кр" ; "кр" - этап работы КР
+						ControlClick($IrbisTit, "", "[CLASS:TToolBar; INSTANCE:1]", "left", 1, 176, 13)
+						$hWnd = WinWaitActive("Установка личных параметров", "", 5)
+						If $hWnd Then
+							WinMove("Установка личных параметров", "", 594, 295, 472, 310)
+							ControlClick("Установка личных параметров", "", "[CLASS:TStringGrid; INSTANCE:1]", "left", 1, 347, 30)
+							Send("{F2}")
+							$hWnd1 = WinWaitActive('"Этап работы"', "", 5)
+							If $hWnd1 Then
+								Send("{HOME}{PGDN}{DOWN}{ENTER}")
+							EndIf
+							If $hWnd Then
+								Send("{TAB}{ENTER}")
+							EndIf
+						EndIf
+
+					Case "прф" ; "прф" - этап работы ПРФ
+						ControlClick($IrbisTit, "", "[CLASS:TToolBar; INSTANCE:1]", "left", 1, 176, 13)
+						$hWnd = WinWaitActive("Установка личных параметров", "", 5)
+						If $hWnd Then
+							WinMove("Установка личных параметров", "", 594, 295, 472, 310)
+							ControlClick("Установка личных параметров", "", "[CLASS:TStringGrid; INSTANCE:1]", "left", 1, 347, 30)
+							Send("{F2}")
+							$hWnd1 = WinWaitActive('"Этап работы"', "", 5)
+							If $hWnd1 Then
+								Send("{END}{PGUP}{UP 2}{ENTER}")
+							EndIf
+							If $hWnd Then
+								Send("{TAB}{ENTER}")
+							EndIf
+						EndIf
+
+					Case "сис" ; "сис" - этап работы С
+						ControlClick($IrbisTit, "", "[CLASS:TToolBar; INSTANCE:1]", "left", 1, 176, 13)
+						$hWnd = WinWaitActive("Установка личных параметров", "", 5)
+						If $hWnd Then
+							WinMove("Установка личных параметров", "", 594, 295, 472, 310)
+							ControlClick("Установка личных параметров", "", "[CLASS:TStringGrid; INSTANCE:1]", "left", 1, 347, 30)
+							Send("{F2}")
+							$hWnd1 = WinWaitActive('"Этап работы"', "", 5)
+							If $hWnd1 Then
+								Send("{HOME}{DOWN 2}{ENTER}")
+							EndIf
+							If $hWnd Then
+								Send("{TAB}{ENTER}")
+							EndIf
+						EndIf
+
+					Case "пкт" ; "пкт" - этап работы ОБРНЗ, ПКТ
+						ControlClick($IrbisTit, "", "[CLASS:TToolBar; INSTANCE:1]", "left", 1, 176, 13)
+						$hWnd = WinWaitActive("Установка личных параметров", "", 5)
+						If $hWnd Then
+							WinMove("Установка личных параметров", "", 594, 295, 472, 310)
+							ControlClick("Установка личных параметров", "", "[CLASS:TStringGrid; INSTANCE:1]", "left", 1, 347, 30)
+							Send("{F2}")
+							$hWnd1 = WinWaitActive('"Этап работы"', "", 5)
+							If $hWnd1 Then
+								Send("{HOME}{ENTER}")
+							EndIf
+							If $hWnd Then
+								Send("{TAB}{ENTER}")
+							EndIf
+						EndIf
 
 					Case "хар" ; "хар" - характер документа
 						Send("!q" & 900 & "{ENTER}" & "{F2}")
@@ -256,7 +378,7 @@ Func Field()
 					Case "сер" ; "сер" - заглавие серии
 						Send("!q" & 225 & "{ENTER}")
 					Case "инд" ; "инд" - индекс МДА
-						Send("!q" & 686 & "{ENTER}")
+						Send("!q" & "686" & "{ENTER}")
 					Case "аз" ; "аз" - авторский знак
 						Send("!q" & 908 & "{ENTER}" & "{F2}")
 					Case "кат" ; "кат" - поле "Каталогизатор"
@@ -307,10 +429,12 @@ Func Field()
 						Send("!q" & 200 & "{ENTER}" & "{F2}")
 						$hWnd = WinWaitActive('Элемент: "200', "", 5)
 						If $hWnd Then
-							ControlFocus('Элемент: "200', "", "[CLASS:TTntRichEdit.UnicodeClass; INSTANCE:1")
+							_WinAPI_SetKeyboardLayout(WinGetHandle(AutoItWinGetTitle()), 0x0419)
+							ControlClick($hWnd, "", "[CLASS:TTntRichEdit.UnicodeClass; INSTANCE:1]", "left", 1, 12, 12)
 							Send("{PGDN}")
 							Sleep(100)
 							Send("{UP}")
+							_WinAPI_SetKeyboardLayout(WinGetHandle(AutoItWinGetTitle()), 0x0409)
 						EndIf
 					Case "свед" ; "свед" - сведения к заглавию однотомника
 						Send("!q" & 200 & "{ENTER}" & "{F2}")
@@ -331,7 +455,7 @@ Func Field()
 							Send("{DOWN 2}")
 						EndIf
 					Case "руб" ; "руб" - предметная рубрика
-						Send("!q" & 606 & "{ENTER}" & "{F2}")
+						Send("!q" & "606" & "{ENTER}" & "{F2}")
 						$hWnd = WinWaitActive('Элемент: "606', "", 5)
 						If $hWnd Then
 							Send("{DOWN}")
@@ -523,6 +647,49 @@ Func Field()
 								ControlSend($IrbisTit, "", "[CLASS:THSHintComboBox; INSTANCE:2]", "{HOME}" & "{DOWN}")
 							EndIf
 						EndIf
+
+					Case "пвкср"
+						;**** получение инв. номера
+
+						WinActivate($IrbisTit)
+						$hWnd = WinWaitActive($IrbisTit, "", 5)
+						If $hWnd Then
+							Send("!q")
+							Sleep(100)
+							Send(910 & "{ENTER}")
+							$text = WinGetText($IrbisTit, "")
+							$pos1 = StringInStr($text, "^B", 0, 1) + 2
+							$pos2 = StringInStr($text, "^C", 0, 1)
+							$invNumLen = $pos2 - $pos1
+							$invNum = (StringMid($text, $pos1, $invNumLen))
+						EndIf
+
+						;**** открытие текущего номера и записи для сравнения
+						Send("!z")
+						$hWnd = WinWaitActive("Поиск по словарю/Рубрикатору", "", 5)
+						If $hWnd Then
+
+							ControlSend("Поиск по словарю/Рубрикатору", "", "[CLASS:THSHintComboBox; INSTANCE:1]", "{HOME}")
+							Sleep(100)
+							ControlSend("Поиск по словарю/Рубрикатору", "", "[CLASS:THSHintComboBox; INSTANCE:1]", "{DOWN}")
+							Sleep(100)
+							ControlClick("Поиск по словарю/Рубрикатору", "", "[CLASS:TGroupButton; INSTANCE:6]")
+							ControlFocus("Поиск по словарю/Рубрикатору", "", "[CLASS:TTntEdit.UnicodeClass; INSTANCE:1]")
+							Send($invNum & "{ENTER}")
+							Sleep(100)
+							Send("284411" & "{ENTER}")
+							Sleep(200)
+							ControlClick("Поиск по словарю/Рубрикатору", "", "[CLASS:TBitBtn; INSTANCE:3]")
+							Sleep(500)
+							ControlClick("Поиск по словарю/Рубрикатору", "", "[CLASS:TBitBtn; INSTANCE:1]")
+						EndIf
+						$hWnd1 = WinWaitActive($IrbisTit, "", 5)
+						If $hWnd1 Then
+							ControlSend($IrbisTit, "", "[CLASS:THSHintTntComboBox.UnicodeClass; INSTANCE:1]", "{HOME}" & "{DOWN}")
+						EndIf
+
+
+
 					Case "спек" ; "спек" - переделывает описание в SPEC
 						Send("!q" & 900 & "{ENTER}" & "{F2}")
 						$hWnd = WinWaitActive('Элемент: "900', "", 5)
@@ -639,33 +806,46 @@ Func Field()
 							EndIf
 						EndIf
 					Case "конв" ; "конв" - создание 830 поля и внесение сведений о прежнем вхождении в конволют
-						ControlClick($IrbisTit, "", "[CLASS:TToolBar; INSTANCE:4]", "left", 1, 230, 10)
-						Send("{TAB 2}" & "{END}" & "{UP 2}" & "{ENTER}")
-						$wTit = WinGetTitle("[ACTIVE]")
-						$aTT = StringInStr($wTit, "Внимание")
-						If $aTT = 1 Then
-							WinClose("Внимание")
-							WinClose("Добавить")
-						Else
-							$aTT = 0
-						EndIf
-						Sleep(300)
-						Send("!q" & 910 & "{ENTER}" & "{F2}")
-						$hWnd = WinWaitActive('Элемент: "910', "", 5)
+						WinActivate($IrbisTit)
+						$hWnd = WinWaitActive($IrbisTit, "", 5)
 						If $hWnd Then
-							Send("{DOWN}")
-							Sleep(500)
-							$invNum = ControlGetText('Элемент: "910', "", "[CLASS:TTntRichEdit.UnicodeClass; INSTANCE:1]")
-							WinClose('Элемент: "910')
-							Send("!q" & 830 & "{ENTER}")
+							Send("!q")
+							Sleep(100)
+							Send(910 & "{ENTER}")
+							$text = WinGetText($IrbisTit, "")
+							$pos1 = StringInStr($text, "^B", 0, 1) + 2
+							$pos2 = StringInStr($text, "^C", 0, 1)
+							$invNumLen = $pos2 - $pos1
+							$invNum = (StringMid($text, $pos1, $invNumLen))
+							ClipPut("^007^!07^aИнв. " & $invNum & ": до " & _NowDate() & " входил в конволют (инв. )")
+							;**** добавление 830 поля
+							WinActivate($IrbisTit)
+							$hWnd = WinWaitActive($IrbisTit, "", 5)
+							If $hWnd Then
+								Send("!r")
+							EndIf
+							$hWnd1 = WinWaitActive("Добавить элемент в РЛ", "", 5)
+							If $hWnd1 Then
+								ControlFocus("Добавить элемент в РЛ", "", "[CLASS:TListBox; INSTANCE:1]")
+								Send("{END}" & "{UP 2}" & "{ENTER}")
+								$hWnd1 = WinWaitActive("Внимание", "", 1)
+								If $hWnd1 Then
+									WinClose("Добавить элемент в РЛ")
+									WinClose("Внимание")
+									WinActivate($IrbisTit)
+									$hWnd = WinWaitActive($IrbisTit, "", 5)
+									If $hWnd Then
+										Send("!q" & 830 & "{ENTER}")
+										Sleep(100)
+										Send("^{ENTER}")
+									EndIf
+								EndIf
+								$hWnd = WinWaitActive($IrbisTit, "", 5)
+								If $hWnd1 Then
+									Send("+{INS}")
+								EndIf
+							EndIf
 						EndIf
-						If $aTT = 1 Then
-							Sleep(300)
-							Send("^{ENTER}")
-						EndIf
-						ClipPut("^007^!07^aИнв. " & $invNum & ": до " & _NowDate() & " входил в конволют (инв. )")
-						Send("+{INS}")
-
 
 						; 			3) Переход по базам
 					Case "журн" ; "журн" - Периодические издания с 2014 г.
@@ -705,6 +885,10 @@ Func Field()
 						_Word_DocOpen($oWord, "d:\dESCTOP\2.Формуляры\Формуляр лежачий (история выдач).doc")
 						Local $hWnd = WinWait("[CLASS:OpusApp]", "", 10)
 						WinActivate($hWnd)
+					Case "рег"
+						Local $oExcel = _Excel_Open()
+						_Excel_BookOpen(_Excel_Open(), "d:\dESCTOP\Регистрация книг.xls")
+
 					Case "скан"
 						Local $oWord = _Word_Create()
 						_Word_DocOpen($oWord, "d:\dESCTOP\СканКоп.rtf")
@@ -1010,7 +1194,9 @@ Func Search()
 		; если введенная строка - число, открытие записи в Ирбисе по инв. номеру
 
 		If StringIsInt($input) Then
-			Send("!f" & "инв" & "{ENTER}")
+			Send("!f")
+			Sleep(100)
+			Send("инв" & "{ENTER}")
 			Sleep(100)
 			Send("!d" & $input & "{ENTER}")
 		Else
@@ -1033,6 +1219,26 @@ Func Search()
 						Send("!f" & "инв" & "{ENTER}")
 						Sleep(100)
 						Send("!d")
+					Case "хар" ; "хар" - по характеру документа
+						Send("!f" & "хар" & "{ENTER}")
+						Sleep(100)
+						Send("!d")
+					Case "год" ; "год" - по году издания
+						Send("!f" & "год" & "{ENTER}")
+						Sleep(100)
+						Send("!d")
+					Case "тек" ; "тек" - открыть текущую запись отдельно
+						;**** получение инв. номера
+						Send("!q" & 910 & "{ENTER}")
+						$text = WinGetText($IrbisTit, "")
+						$pos1 = StringInStr($text, "^B", 0, 1) + 2
+						$pos2 = StringInStr($text, "^C", 0, 1)
+						$invNumLen = $pos2 - $pos1
+						$invNum = (StringMid($text, $pos1, $invNumLen))
+						;**** открытие записи по инв. номеру
+						Send("!f" & "инв" & "{ENTER}")
+						Sleep(200)
+						Send("!d" & $invNum & "{ENTER}")
 					Case "мн" ; "мн" - все многотомники
 						Send("!f" & "вид" & "{ENTER}")
 						Sleep(100)
@@ -1154,86 +1360,98 @@ Func Osn()
 		;**** Открытие существующего файла
 		$filePath = "c:\irbiswrk\" & $invNum & ".RTF"
 		$SecondfilePath = "c:\irbiswrk\Сделаны\" & $invNum & ".RTF"
-		If FileExists($filePath) Then
-			Local $oWord = _Word_Create()
-			_Word_DocOpen($oWord, $filePath)
-			Local $hWnd = WinWait("[CLASS:OpusApp]", "", 10)
-			WinActivate($hWnd)
-		ElseIf FileExists($SecondfilePath) Then
-			Local $oWord = _Word_Create()
-			_Word_DocOpen($oWord, $SecondfilePath)
-			Local $hWnd = WinWait("[CLASS:OpusApp]", "", 10)
-			WinActivate($hWnd)
+		If FileExists($filePath) Or FileExists($SecondfilePath) Then
+			$ans = MsgBox(67, "Внимание", "Файл существует. Открыть его?")
+			If $ans = 6 Then
+				If FileExists($filePath) Then
+					Local $oWord = _Word_Create()
+					_Word_DocOpen($oWord, $filePath)
+					Local $hWnd = WinWait("[CLASS:OpusApp]", "", 10)
+					WinActivate($hWnd)
+
+				ElseIf FileExists($SecondfilePath) Then
+					Local $oWord = _Word_Create()
+					_Word_DocOpen($oWord, $SecondfilePath)
+					Local $hWnd = WinWait("[CLASS:OpusApp]", "", 10)
+					WinActivate($hWnd)
+				EndIf
+			ElseIf $ans = 7 Then
+				PrintOsn($invNum)
+			EndIf
 		Else
-
-
-			;**** Проверка на наличие автора
-			$autorExM = 0
-			$autorEx = 0
-			;**** в многотомнике
-			_WinAPI_SetKeyboardLayout(WinGetHandle(AutoItWinGetTitle()), 0x0409)
-			Send("!q" & 961 & "{ENTER}")
-			$hWnd = WinWaitActive("ОШИБКА", "", 1)
-			If $hWnd Then
-				WinClose("ОШИБКА")
-			Else
-				$wText = WinGetText($IrbisTit)
-				$autorExM = StringInStr($wText, "ДА")
-				If $autorExM > 0 Then
-					$autorExM = 1
-				Else
-					$autorExM = 2
-				EndIf
-			EndIf
-
-			;**** в однотомнике
-
-			Send("!q" & 700 & "{ENTER}")
-			$wText = WinGetText($IrbisTit)
-			$autorEx = StringInStr($wText, "A")
-
-			If $autorEx > 0 Then
-				$autorEx = 1
-			Else
-				$autorEx = 0
-			EndIf
-
-			ControlClick($IrbisTit, "", "[CLASS:TToolBar; INSTANCE:1]", "left", 1, 34, 12)
-			$hWnd = WinWaitActive("Печать", "", 5)
-			If $hWnd Then
-				ControlSend("Печать", "", "[CLASS:THSHintComboBox; INSTANCE:1]", "{HOME}" & "{DOWN 7}")
-				Sleep(200)
-				ControlClick("Печать", "", "[CLASS:TBitBtn; INSTANCE:2]", "left", 2)
-			EndIf
-			$hWnd = WinWaitActive("Файл", "", 5)
-			If $hWnd Then
-				ControlSend("Файл", "", "[CLASS:Edit; INSTANCE:1]", $invNum)
-				Send("{TAB 2}" & "{ENTER}")
-			EndIf
-			$hWnd = WinWaitActive("Внимание", "", 5)
-			If $hWnd Then
-				ControlClick("Внимание", "", "[CLASS:Button; INSTANCE:1]")
-			EndIf
-			$hWnd = WinWaitActive("[CLASS:OpusApp]", "", 5)
-			If $hWnd Then
-				WinClose("Печать текущего")
-				$Object = ObjGet("", "Word.Application")
-
-				If $autorExM = 2 And $autorEx = 1 Then
-					$Object.Run("Макрос2")
-				ElseIf $autorExM = 1 Or $autorEx = 1 Then
-					$Object.Run("Макрос1")
-				Else
-					$Object.Run("Макрос2")
-				EndIf
-
-			Else
-			EndIf
+			PrintOsn($invNum)
 		EndIf
-
 	EndIf
 EndFunc   ;==>Osn
 
+Func PrintOsn($invNum)
+	;**** Проверка на наличие автора
+	$autorExM = 0
+	$autorEx = 0
+	;**** в многотомнике
+	_WinAPI_SetKeyboardLayout(WinGetHandle(AutoItWinGetTitle()), 0x0409)
+	Send("!q" & 961 & "{ENTER}")
+	$hWnd = WinWaitActive("ОШИБКА", "", 1)
+	If $hWnd Then
+		WinClose("ОШИБКА")
+	Else
+		$wText = WinGetText($IrbisTit)
+		$autorExM = StringInStr($wText, "ДА")
+		If $autorExM > 0 Then
+			$autorExM = 1
+		Else
+			$autorExM = 2
+		EndIf
+	EndIf
+
+	;**** в однотомнике
+
+	Send("!q" & 700 & "{ENTER}")
+	$wText = WinGetText($IrbisTit)
+	$autorEx = StringInStr($wText, "A")
+
+	If $autorEx > 0 Then
+		$autorEx = 1
+	Else
+		$autorEx = 0
+	EndIf
+
+	ControlClick($IrbisTit, "", "[CLASS:TToolBar; INSTANCE:1]", "left", 1, 34, 12)
+	$hWnd = WinWaitActive("Печать", "", 5)
+	If $hWnd Then
+		ControlSend("Печать", "", "[CLASS:THSHintComboBox; INSTANCE:1]", "{HOME}" & "{DOWN 7}")
+		Sleep(200)
+		ControlClick("Печать", "", "[CLASS:TBitBtn; INSTANCE:2]", "left", 2)
+	EndIf
+	$hWnd = WinWaitActive("Файл", "", 5)
+	If $hWnd Then
+		ControlSend("Файл", "", "[CLASS:Edit; INSTANCE:1]", $invNum)
+		Send("{TAB 2}" & "{ENTER}")
+	EndIf
+	Sleep(100)
+	$wTit = WinGetTitle("[ACTIVE]")
+	$isWin = StringInStr($wTit, "Подтвердить сохранение в виде")
+	If $isWin <> 0 Then
+		ControlClick("Подтвердить сохранение в виде", "", "[CLASS:Button; INSTANCE:1]")
+	EndIf
+	$hWnd = WinWaitActive("Внимание", "", 5)
+	If $hWnd Then
+		ControlClick("Внимание", "", "[CLASS:Button; INSTANCE:1]")
+	EndIf
+	$hWnd = WinWaitActive("[CLASS:OpusApp]", "", 5)
+	If $hWnd Then
+		WinClose("Печать текущего")
+		$Object = ObjGet("", "Word.Application")
+
+		If $autorExM = 2 And $autorEx = 1 Then
+			$Object.Run("Макрос2")
+		ElseIf $autorExM = 1 Or $autorEx = 1 Then
+			$Object.Run("Макрос1")
+		Else
+			$Object.Run("Макрос2")
+		EndIf
+	EndIf
+EndFunc   ;==>PrintOsn
 ;						CTRL+K Печать контрольной карточки
 Func KK()
 
@@ -1488,3 +1706,11 @@ Func ViewFocus()
 		ControlClick($IrbisTit, "", "[CLASS:Internet Explorer_Server; INSTANCE:1]", "left", 1, 1034, 25)
 	EndIf
 EndFunc   ;==>ViewFocus
+
+Func RusSend($com)
+	_WinAPI_SetKeyboardLayout(WinGetHandle(AutoItWinGetTitle()), 0x0419)
+	MsgBox(0, "", _WinAPI_GetKeyboardLayout(WinGetHandle(AutoItWinGetTitle())))
+	Send($com)
+	_WinAPI_SetKeyboardLayout(WinGetHandle(AutoItWinGetTitle()), 0x0409)
+EndFunc   ;==>RusSend
+
