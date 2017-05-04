@@ -9,12 +9,10 @@
 #include <MsgBoxConstants.au3>
 #include <Excel.au3>
 
-
 ;
 ;
 ; 					Горячие клавиши для работы в АРМ "Каталогизатор" (ИРБИС64)
 ;
-
 
 _WinAPI_SetKeyboardLayout(WinGetHandle(AutoItWinGetTitle()), 0x0409)
 HotKeySet("^v", "Vstavka")
@@ -29,15 +27,14 @@ HotKeySet("^d", "Formular")
 HotKeySet("^y", "Label")
 HotKeySet("^m", "FormularLabel")
 HotKeySet("^{F8}", "OnTop")
-
 HotKeySet("^{F9}", "OnTopOff")
 HotKeySet("^+g", "Obrzv")
 HotKeySet("^{F12}", "ScrExit")
 HotKeySet("^{SPACE}", "ViewFocus")
+HotKeySet("^+k", "CopySelected")
 
-
+$clip = ''
 $IrbisTit = 'ИРБИС64 - АРМ "Каталогизатор"'
-
 
 While 1
 	Sleep(100)
@@ -52,8 +49,6 @@ WEnd
 Func ScrExit()
 	Exit
 EndFunc   ;==>ScrExit
-
-
 Func Obrzv()
 	$wTit = WinGetTitle("[ACTIVE]")
 	$isIrbis = StringInStr($wTit, $IrbisTit)
@@ -62,62 +57,51 @@ Func Obrzv()
 		HotKeySet("^+g")
 		Send("^+g")
 		HotKeySet("^+g", "Obrzv")
-	ElseIf $SPA <> 0 Then
-		;**** Этап работы
-		ControlClick($IrbisTit, "", "[CLASS:TToolBar; INSTANCE:1]", "left", 1, 176, 13)
-		$hWnd = WinWaitActive("Установка личных параметров", "", 5)
-		If $hWnd Then
-			WinMove("Установка личных параметров", "", 594, 295, 472, 310)
-			ControlClick("Установка личных параметров", "", "[CLASS:TStringGrid; INSTANCE:1]", "left", 1, 347, 30)
-			Send("{F2}")
-			$hWnd1 = WinWaitActive('"Этап работы"', "", 5)
-			If $hWnd1 Then
-				Sleep(100)
-				Send("{END}{PGUP}{UP 4}{ENTER}")
-			EndIf
+	Else
+		Sleep(10)
+		Send("{CTRLDOWN}")
+		Sleep(10)
+		Send("{CTRLUP}")
+		If $SPA <> 0 Then
+;~ 							Установка этапа работы
+			ControlClick($IrbisTit, "", "[CLASS:TToolBar; INSTANCE:1]", "left", 1, 176, 13)
 			$hWnd = WinWaitActive("Установка личных параметров", "", 5)
 			If $hWnd Then
-				Send("{TAB}{ENTER}")
+				WinMove("Установка личных параметров", "", 594, 295, 472, 310)
+				ControlClick("Установка личных параметров", "", "[CLASS:TStringGrid; INSTANCE:1]", "left", 1, 347, 30)
+				_WinAPI_SetKeyboardLayout(WinGetHandle(AutoItWinGetTitle()), 0x0419)
+				Send("{HOME}" & "+{END}" & 'obrzv' & "{TAB}{ENTER}")
+			EndIf
+			;**** корректировка
+			$glW = "Глобальная корректировка БД"
+			$hWnd = WinWaitActive($IrbisTit, "", 3)
+			If $hWnd Then
+				Sleep(100)
+				ControlClick($IrbisTit, "", "[CLASS:TToolBar; INSTANCE:4]", "left", 1, 323, 11)
+				$gWnd = WinWaitActive($glW, "", 3)
+				If $gWnd Then
+					Sleep(300)
+					ControlClick($glW, "", "[CLASS:TCheckBox; INSTANCE:5]")
+					ControlClick($glW, "", "[CLASS:TToolBar; INSTANCE:3]", "left", 1, 101, 11)
+				EndIf
+
+				$gWnd = WinWaitActive("Выбор", "", 3)
+				If $gWnd Then
+					ControlClick("Выбор", "", "[CLASS:TBitBtn; INSTANCE:2]")
+				EndIf
+
+				$gWnd = WinWaitActive("Открытие", "", 3)
+				If $gWnd Then
+					Send("{!}{!}КР-ФЛК" & "{DOWN}" & "{ENTER}")
+					ControlClick($glW, "", "[CLASS:TButton; INSTANCE:5]")
+				EndIf
+;~ 				Перезапуск скрипта - временное решение бага с отключением CTRL
+				Run(FileGetShortName(@ScriptFullPath))
 			EndIf
 		EndIf
-		;**** корректировка
-		$glW = "Глобальная корректировка БД"
-		$hWnd = WinWaitActive($IrbisTit, "", 5)
-		If $hWnd Then
-			Sleep(100)
-			ControlClick($IrbisTit, "", "[CLASS:TToolBar; INSTANCE:4]", "left", 1, 323, 11)
-			$gWnd = WinWaitActive($glW, "", 5)
-			If Not $gWnd Then
-				MsgBox(4096, 'Сообщение', 'Окно не найдено, завершаем работу скрипта')
-			EndIf
-			If $gWnd Then
-				Sleep(300)
-				ControlClick($glW, "", "[CLASS:TCheckBox; INSTANCE:5]")
-				ControlClick($glW, "", "[CLASS:TToolBar; INSTANCE:3]", "left", 1, 101, 11)
-			EndIf
-
-			$gWnd = WinWaitActive("Выбор", "", 5)
-			If $gWnd Then
-				ControlClick("Выбор", "", "[CLASS:TBitBtn; INSTANCE:2]")
-			EndIf
-
-			$gWnd = WinWaitActive("Открытие", "", 5)
-			If $gWnd Then
-				Send("{!}{!}КР-ФЛК" & "{DOWN}" & "{ENTER}")
-				ControlClick($glW, "", "[CLASS:TButton; INSTANCE:5]")
-			EndIf
-
-			$gWnd = WinWaitActive("Глобальная корректировка БД MPDA", "", 1)
-			If $gWnd Then
-				Sleep(300)
-				ControlClick("Глобальная корректировка БД MPDA", "", "[CLASS:TBitBtn; INSTANCE:3]")
-			EndIf
-		EndIf
-
 
 	EndIf
 EndFunc   ;==>Obrzv
-
 
 ;						CTRL+V Вставка. Вставляет в поле данные без раскрытия окна "Элемент"
 Func Vstavka()
@@ -165,7 +149,9 @@ Func SearchNumbs()
 		HotKeySet("^z", "SearchNumbs")
 
 	Else
+;~ 		Фокус на рабочем листе
 		ControlFocus($IrbisTit, "", "[CLASS:TTntStringGrid.UnicodeClass; INSTANCE:3]")
+;~ 		Получение названия базы и сравнение
 		$bdName = ControlGetText($IrbisTit, "", "[CLASS:THSHintComboBox; INSTANCE:4]")
 		$isPRBD = StringInStr($bdName, "PR - Периодические издания (с 2014 г.)")
 		Sleep(10)
@@ -178,11 +164,13 @@ Func SearchNumbs()
 
 		$hWnd = WinWaitActive("Поиск по словарю/Рубрикатору", "", 5)
 		If $hWnd Then
+;~ 			Если запрос по базе период. изданий, то отбор по заглавию
 			If $isPRBD = 0 Then
 				ControlSend("Поиск по словарю/Рубрикатору", "", "[CLASS:THSHintComboBox; INSTANCE:1]", "{HOME}")
 				Sleep(100)
 				ControlSend("Поиск по словарю/Рубрикатору", "", "[CLASS:THSHintComboBox; INSTANCE:1]", "{DOWN}")
 			Else
+;~ 			Иначе - отбор по инв. номеру
 				ControlSend("Поиск по словарю/Рубрикатору", "", "[CLASS:THSHintComboBox; INSTANCE:1]", "{HOME}")
 				For $i = 4 To 1 Step -1
 					Sleep(100)
@@ -222,7 +210,6 @@ Func SearchNumbs()
 		EndIf
 	EndIf
 EndFunc   ;==>SearchNumbs
-;
 
 ;						CTRL+Q Разные команды. Читает введенную строку и выполняет команды
 Func Field()
@@ -243,7 +230,9 @@ Func Field()
 		_WinAPI_SetKeyboardLayout(WinGetHandle(AutoItWinGetTitle()), 0x0419)
 		$input = InputBox("Выполнить", "Название поля:", "", "", 190, 130)
 		_WinAPI_SetKeyboardLayout(WinGetHandle(AutoItWinGetTitle()), 0x0409)
-
+		If StringLen($input) > 100 Then
+			$input = "error"
+		EndIf
 		If WinWaitActive($IrbisTit, "", 5) Then
 
 
@@ -251,7 +240,7 @@ Func Field()
 			$sPath_ini = @ScriptDir & "\IrbisHotkeys.ini"
 			$rubDir = IniRead($sPath_ini, "Sec1", "RubDir", "d:\Рубрики по уровням\")
 
-			; 			1) Если введенная строка - число
+			; 			1. Если введенная строка - число
 			If StringIsInt($input) Then
 				; Переход по номеру поля, если цифр в числе меньше 4
 				If StringLen($input) < 4 Then
@@ -259,10 +248,11 @@ Func Field()
 				Else
 					; Открытие записи в Ирбисе по инв. номеру, если цифр в числе больше 3
 					Srchfor("инв")
-					Send($input & "{ENTER}")
+					ClipMan($input)
+					Send("{ENTER}")
 				EndIf
 			Else
-				; 			2) Переход по полям. Вид: введенная строка - выполняемая команда (открытие полей, файлов и проч.)
+				; 			2. Переход по полям. Вид: введенная строка - выполняемая команда (открытие полей, файлов и проч.)
 
 				Do
 					$exit = 0
@@ -285,6 +275,11 @@ Func Field()
 								EndIf
 							EndIf
 						Case "прк" ; "прк" - этап работы ПРК
+;~ 							Получение названия текущей базы и сравнение
+							$bdName = ControlGetText($IrbisTit, "", "[CLASS:THSHintComboBox; INSTANCE:4]")
+							$isDisBD = StringInStr($bdName, "DST - Диссертационная база МДА")
+
+;~ 							Вызов окна личных параметров
 							ControlClick($IrbisTit, "", "[CLASS:TToolBar; INSTANCE:1]", "left", 1, 176, 13)
 							$hWnd = WinWaitActive("Установка личных параметров", "", 5)
 							If $hWnd Then
@@ -293,7 +288,12 @@ Func Field()
 								Send("{F2}")
 								$hWnd1 = WinWaitActive('"Этап работы"', "", 5)
 								If $hWnd1 Then
-									Send("{HOME}{PGDN}{DOWN 2}{ENTER}")
+;~ 									Если это база диссертаций, установка этапа работы КР
+									If $isDisBD Then
+										Send("{HOME}{PGDN}{DOWN 3}{ENTER}")
+									Else
+										Send("{HOME}{PGDN}{DOWN 2}{ENTER}")
+									EndIf
 								EndIf
 								If $hWnd Then
 									Send("{TAB}{ENTER}")
@@ -301,6 +301,11 @@ Func Field()
 							EndIf
 
 						Case "кр" ; "кр" - этап работы КР
+;~ 							Получение названия текущей базы и сравнение
+							$bdName = ControlGetText($IrbisTit, "", "[CLASS:THSHintComboBox; INSTANCE:4]")
+							$isDisBD = StringInStr($bdName, "DST - Диссертационная база МДА")
+
+;~ 							Вызов окна личных параметров
 							ControlClick($IrbisTit, "", "[CLASS:TToolBar; INSTANCE:1]", "left", 1, 176, 13)
 							$hWnd = WinWaitActive("Установка личных параметров", "", 5)
 							If $hWnd Then
@@ -309,7 +314,12 @@ Func Field()
 								Send("{F2}")
 								$hWnd1 = WinWaitActive('"Этап работы"', "", 5)
 								If $hWnd1 Then
-									Send("{HOME}{PGDN}{DOWN}{ENTER}")
+;~ 									Если это база диссертаций, установка этапа работы КР
+									If $isDisBD Then
+										Send("{HOME}{PGDN}{DOWN 3}{ENTER}")
+									Else
+										Send("{HOME}{PGDN}{DOWN}{ENTER}")
+									EndIf
 								EndIf
 								If $hWnd Then
 									Send("{TAB}{ENTER}")
@@ -483,12 +493,10 @@ Func Field()
 							EndIf
 						Case "осо" ; "осо" - отключение сведений об ответственности
 							GoToField(905)
-							ClipPut("^11")
-							Send("+{INS}")
+							ClipMan("^11")
 						Case "бсз" ; "бсз" - сведения к заглавию с прописной
 							GoToField(905)
-							ClipPut("^23")
-							Send("+{INS}")
+							ClipMan("^23")
 						Case "уни" ; "уни" - описание переделывается в "ЗАПОЛНИТЬ НОВОЙ ЗАПИСЬЮ"
 							If OpenElement(503) Then
 								Send("{F2}")
@@ -504,8 +512,7 @@ Func Field()
 								If $hWnd1 Then
 									GoToField(910)
 									Send("^{ENTER}")
-									ClipPut("^A0^B000-6")
-									Send("+{INS}")
+									ClipMan("^A0^B000-6")
 								EndIf
 							EndIf
 						Case "пп" ; "пп" - отметка о плохом переплете
@@ -541,7 +548,7 @@ Func Field()
 						Case "шифр" ; "шифр" - шифр док-та в БД
 							GoToField(903)
 						Case "сод" ; "сод" - открытие поля "Содержание" в виде таблицы и переход на заглавие
-							If OpenElement(330) Then
+							If OpenElementF3(330) Then
 								Send("{ENTER 33} {LEFT 4}")
 							EndIf
 						Case "пер" ; "пер" - заглавие оригинала переводного издания
@@ -604,7 +611,6 @@ Func Field()
 						Case "пвкср"
 							;**** открытие текущего номера и записи для сравнения
 							$invNum = GetInvNum()
-							ClipPut($invNum)
 							Send("!z")
 							$hWnd = WinWaitActive("Поиск по словарю/Рубрикатору", "", 5)
 							If $hWnd Then
@@ -614,7 +620,8 @@ Func Field()
 								Sleep(100)
 								ControlClick("Поиск по словарю/Рубрикатору", "", "[CLASS:TGroupButton; INSTANCE:6]")
 								ControlFocus("Поиск по словарю/Рубрикатору", "", "[CLASS:TTntEdit.UnicodeClass; INSTANCE:1]")
-								Send($invNum & "{ENTER}")
+								ClipMan($invNum)
+								Send("{ENTER}")
 								Sleep(100)
 								Send("284411" & "{ENTER}")
 								Sleep(200)
@@ -656,7 +663,7 @@ Func Field()
 
 
 						Case "эбс" ; "эбс" - создание 830 поля и внесение сведений о копии в ЭБ
-							ClipPut("^0w=^!ЭБ^a" & GetInvNum())
+							$invNum = GetInvNum()
 							;**** добавление 830 поля
 							WinActivate($IrbisTit)
 							$hWnd = WinWaitActive($IrbisTit, "", 5)
@@ -673,18 +680,28 @@ Func Field()
 										GoToField(830)
 										Send("^{ENTER}")
 									EndIf
-									Send("+{INS}")
+									ClipMan("^0w=^!ЭБ^a" & $invNum)
 								EndIf
 							EndIf
 
 						Case "изм" ; "изм" - создание 830 поля и внесение сведений об изменении индекса МДА и авт. зн.
 							GoToField(686)
-							Send("+{END}" & "^c")
-							$indMDA = ClipGet()
+							_WinAPI_SetKeyboardLayout(WinGetHandle(AutoItWinGetTitle()), 0x0409)
+							$indMDA = WinGetText($IrbisTit, "")
+							$pos1 = StringInStr($indMDA, "Page7", 0, 1) + 6
+							$indMDA = (StringMid($indMDA, $pos1, 3))
+
 							GoToField(908)
-							Send("+{END}" & "^c")
-							$avtZn = ClipGet()
-							ClipPut("^007^!07^aИнв. " & GetInvNum() & ": до " & _NowDate() & " индекс МДА " & $indMDA & ", авт. знак " & $avtZn)
+							$avtZn = WinGetText($IrbisTit, "")
+							$pos1 = StringInStr($avtZn, "Page7", 0, 1) + 6
+							$text = StringMid($avtZn, $pos1, 3)
+							If StringInStr($text, ' ') = 0 Then
+								$avtZnLen = 3
+							Else
+								$avtZnLen = 4
+							EndIf
+							$avtZn = StringMid($avtZn, $pos1, $avtZnLen)
+							$invNum = GetInvNum()
 							;**** добавление 830 поля
 							WinActivate($IrbisTit)
 							$hWnd = WinWaitActive($IrbisTit, "", 5)
@@ -708,11 +725,11 @@ Func Field()
 								EndIf
 								$hWnd = WinWaitActive($IrbisTit, "", 5)
 								If $hWnd1 Then
-									Send("+{INS}")
+									ClipMan("^007^!07^aИнв. " & $invNum & ": до " & _NowDate() & " индекс МДА " & $indMDA & ", авт. знак " & $avtZn)
 								EndIf
 							EndIf
 						Case "конв" ; "конв" - создание 830 поля и внесение сведений о прежнем вхождении в конволют
-							ClipPut("^007^!07^aИнв. " & GetInvNum() & ": до " & _NowDate() & " входил в конволют (инв. )")
+							$invNum = GetInvNum()
 							;**** добавление 830 поля
 							WinActivate($IrbisTit)
 							$hWnd = WinWaitActive($IrbisTit, "", 5)
@@ -736,7 +753,7 @@ Func Field()
 								EndIf
 								$hWnd = WinWaitActive($IrbisTit, "", 5)
 								If $hWnd1 Then
-									Send("+{INS}")
+									ClipMan("^007^!07^aИнв. " & $invNum & ": до " & _NowDate() & " входил в конволют (инв. )")
 								EndIf
 							EndIf
 
@@ -1064,12 +1081,9 @@ Func Field()
 		EndIf
 	EndIf
 EndFunc   ;==>Field
-;
 
 ;						CTRL+F Поиск по виду основного словаря. Читает введенную строку и выполняет поиск
 Func Search()
-
-
 	$wTit = WinGetTitle("[ACTIVE]")
 	$isIrbis = StringInStr($wTit, $IrbisTit)
 	If $isIrbis = 0 Then
@@ -1086,23 +1100,23 @@ Func Search()
 		_WinAPI_SetKeyboardLayout(WinGetHandle(AutoItWinGetTitle()), 0x0409)
 
 		If WinWaitActive($IrbisTit, "", 5) Then
-; 			1) Если введенная строка - число
-
-			If StringIsInt($input) Then
-				; Переход по номеру поля, если цифр в числе меньше 4
-				If StringLen($input) < 4 Then
-					GoToField($input)
+			Do
+				$exit = 0
+				$inputTest = TestInput($input)
+				If IsArray($inputTest) Then
+					$SPLIT = $inputTest
+					$input = $SPLIT[1]
 				Else
-					; Открытие записи в Ирбисе по инв. номеру, если цифр в числе больше 3
-					Srchfor("инв")
-					Send($input & "{ENTER}")
+					$input = $inputTest
 				EndIf
-			Else
+				; 			1. Если введенная строка - число, открытие записи в Ирбисе по инв. номеру
+				If StringIsInt($input) Then
+					Srchfor("инв")
+					ClipMan($input)
+					Send("{ENTER}")
+				Else
 
-
-; 			2) Поиск по виду основного словаря
-				Do
-					$exit = 0
+					; 			2. Поиск по виду основного словаря
 					Switch $input
 						Case "" ; пустое поле - закрытие окна
 							ExitLoop
@@ -1118,26 +1132,26 @@ Func Search()
 							Srchfor("год")
 						Case "тек" ; "тек" - открыть текущую запись отдельно
 							$invNum = GetInvNum()
-							ClipPut($invNum)
 							;**** открытие записи по инв. номеру
 							Srchfor("инв")
-							Send($invNum & "{ENTER}")
+							ClipMan($invNum)
+							Send("{ENTER}")
 						Case "мн" ; "мн" - все многотомники
 							Srchfor("вид")
 							Send("03" & "{ENTER}")
 						Case "авт" ; "авт" - по автору
-							Srchfor("автор (э")
+							SrchforEx("автор (э", $SPLIT)
 						Case "под" ; "под" - по предметному подзаголовку
-							Srchfor("пред")
+							SrchforEx("пред", $SPLIT)
 						Case "руб" ; "руб" - по предметной рубрике
-							Srchfor("предметные руб")
+							SrchforEx("предметные руб", $SPLIT)
 						Case "заг" ; "заг" - по заглавию
-							Srchfor("заг")
+							SrchforEx($input, $SPLIT)
 						Case "кл" ; "кл" - по ключевому слову
-							Srchfor("кл")
+							SrchforEx($input, $SPLIT)
 						Case "перс" ; "перс" - по персоналии
-							Srchfor("перс")
-						Case Else
+							SrchforEx($input, $SPLIT)
+						Case Else ; неправильное значение заново открывает диалоговое окно ввода
 							$exit = 1
 							_WinAPI_SetKeyboardLayout(WinGetHandle(AutoItWinGetTitle()), 0x0419)
 							$hWnd1 = WinWaitActive($IrbisTit, "", 5)
@@ -1146,11 +1160,10 @@ Func Search()
 								_WinAPI_SetKeyboardLayout(WinGetHandle(AutoItWinGetTitle()), 0x0409)
 							EndIf
 					EndSwitch
-				Until $exit = 0
-			EndIf
+				EndIf
+			Until $exit = 0
 		EndIf
 	EndIf
-
 EndFunc   ;==>Search
 
 ;						ALT+H Последовательный поиск
@@ -1243,6 +1256,7 @@ Func Osn()
 	EndIf
 EndFunc   ;==>Osn
 
+;~ Функция печати основной карточки
 Func PrintOsn($invNum)
 	;**** Проверка на наличие автора
 	$autorExM = 0
@@ -1309,6 +1323,7 @@ Func PrintOsn($invNum)
 		EndIf
 	EndIf
 EndFunc   ;==>PrintOsn
+
 ;						CTRL+K Печать контрольной карточки
 Func KK()
 
@@ -1560,18 +1575,42 @@ Func ViewFocus()
 		Send("^{SPACE}")
 		HotKeySet("^{SPACE}", "ViewFocus")
 	Else
+		Sleep(10)
+		Send("{CTRLDOWN}")
+		Sleep(10)
+		Send("{CTRLUP}")
 		ControlClick($IrbisTit, "", "[CLASS:Internet Explorer_Server; INSTANCE:1]", "left", 1, 1034, 25)
 	EndIf
 EndFunc   ;==>ViewFocus
 
-;~ Функция перехода на поле
+;						CTRL+SHIFT+K Копировать отмеченные поля в буферную запись
+Func CopySelected()
+	$wTit = WinGetTitle("[ACTIVE]")
+	$isIrbis = StringInStr($wTit, $IrbisTit)
+	If $isIrbis = 0 Then
+		HotKeySet("^+k")
+		Send("^+k")
+		HotKeySet("^+k", "CopySelected")
+	Else
+		Sleep(10)
+		Send("{CTRLDOWN}")
+		Sleep(10)
+		Send("{CTRLUP}")
+		Sleep(10)
+		ControlFocus($IrbisTit, "", "[CLASS:TTntStringGrid.UnicodeClass; INSTANCE:3]")
+		Sleep(100)
+		Send("{APPSKEY}{UP 8}{ENTER}")
+	EndIf
+EndFunc   ;==>CopySelected
+
+;~ Функция перехода на поле по номеру
 Func GoToField($com)
 	Send("!q")
 	Sleep(100)
 	Send($com & "{ENTER}")
 EndFunc   ;==>GoToField
 
-;~ Функция раскрытия поля
+;~ Функция раскрытия поля при нажатии F2
 Func OpenElement($com)
 	Send("!q")
 	Sleep(100)
@@ -1582,6 +1621,18 @@ Func OpenElement($com)
 		Return $hWnd
 	EndIf
 EndFunc   ;==>OpenElement
+
+;~ Функция раскрытия поля при нажатии F3
+Func OpenElementF3($com)
+	Send("!q")
+	Sleep(100)
+	Send($com & "{ENTER}" & "{F3}")
+	$hWnd = WinWaitActive('Элемент:  "' & $com, "", 5)
+	If $hWnd Then
+		ControlClick($hWnd, "", "[CLASS:TTntRichEdit.UnicodeClass; INSTANCE:1]", "left", 1, 12, 12)
+		Return $hWnd
+	EndIf
+EndFunc   ;==>OpenElementF3
 
 ;~ Функция получения инв. номера
 Func GetInvNum()
@@ -1600,7 +1651,76 @@ EndFunc   ;==>GetInvNum
 
 ;~ Функция изменения вида словаря
 Func Srchfor($srch)
-	Send("!f" & $srch & "{ENTER}")
-	Sleep(100)
-	Send("!d")
+	Send("!f")
+	If WinWaitActive("Вид основного словаря", "", 5) Then
+		ClipMan($srch)
+		Send("{ENTER}")
+		If WinWaitActive($IrbisTit, "", 5) Then
+			Sleep(100)
+			Send("!d")
+		EndIf
+	EndIf
+
 EndFunc   ;==>Srchfor
+
+;~ Функция изменения вида словаря с вставкой последующих за командой строк
+Func SrchforEx($srch, $SPLIT)
+	Send("!f")
+	If WinWaitActive("Вид основного словаря", "", 5) Then
+		ClipMan($srch)
+		Send("{ENTER}")
+		If WinWaitActive($IrbisTit, "", 5) Then
+			Sleep(100)
+			Send("!d")
+			Sleep(100)
+			$string = ""
+			_WinAPI_SetKeyboardLayout(WinGetHandle(AutoItWinGetTitle()), 0x0419)
+			For $i = 2 To $SPLIT[0]
+				If $i == $SPLIT[0] Then
+					$string = $string & $SPLIT[$i]
+				Else
+					$string = $string & $SPLIT[$i] & ' '
+				EndIf
+			Next
+			_WinAPI_SetKeyboardLayout(WinGetHandle(AutoItWinGetTitle()), 0x0409)
+			Sleep(100)
+			ClipMan($string)
+			Send("{ENTER}")
+		EndIf
+	EndIf
+
+EndFunc   ;==>SrchforEx
+
+;~ Функция использования буфера обмена с сохранением текущего состояния буфера
+Func ClipMan($com)
+	$clip = ClipGet()
+	ClipPut($com)
+	Send("+{INS}")
+	ClipPut($clip)
+EndFunc   ;==>ClipMan
+
+;~ 		Проверка введенной строки
+Func TestInput($input)
+;~ 		Размер строки длиннее 100 символов
+	If StringLen($input) > 100 Then
+		$SPLIT = "error"
+	ElseIf StringInStr($input, ' ') <> 0 Then
+		$SPLIT = StringSplit($input, ' ')
+;~ 			Введено больше 10 слов
+		If $SPLIT[0] > 10 Then
+			$SPLIT = 0
+		Else
+			For $i = 1 To $SPLIT[0]
+;~ 				Одно из слов длиннее 20 символов
+				If StringLen($SPLIT[$i]) > 20 Then
+					$SPLIT = 0
+					ExitLoop
+				EndIf
+			Next
+		EndIf
+	Else
+		$SPLIT = $input
+	EndIf
+	Return $SPLIT
+EndFunc   ;==>TestInput
+
