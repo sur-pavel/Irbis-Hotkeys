@@ -21,11 +21,13 @@ HotKeySet("^z", "SearchNumbs")
 HotKeySet("^q", "Field")
 HotKeySet("^f", "Search")
 HotKeySet("!h", "CohSearch")
-HotKeySet("^w", "Osn")
-HotKeySet("^k", "KK")
-HotKeySet("^d", "Formular")
-HotKeySet("^y", "Label")
-HotKeySet("^m", "FormularLabel")
+
+HotKeySet("^w", "Print")
+HotKeySet("^k", "Print")
+HotKeySet("^d", "Print")
+HotKeySet("^y", "Print")
+HotKeySet("^m", "Print")
+
 HotKeySet("^{F8}", "OnTop")
 HotKeySet("^{F9}", "OnTopOff")
 HotKeySet("^+g", "Obrzv")
@@ -50,18 +52,14 @@ Func ScrExit()
 	Exit
 EndFunc   ;==>ScrExit
 Func Obrzv()
-	$wTit = WinGetTitle("[ACTIVE]")
-	$isIrbis = StringInStr($wTit, $IrbisTit)
-	$SPA = StringInStr($wTit, "СПА")
-	If $isIrbis = 0 Then
-		HotKeySet("^+g")
-		Send("^+g")
-		HotKeySet("^+g", "Obrzv")
-	Else
+	If HotKeyOn("^+g", "Obrzv") Then
 		Sleep(10)
-		Send("{CTRLDOWN}")
+		Send("{SHIFTDOWN}")
 		Sleep(10)
-		Send("{CTRLUP}")
+		Send("{SHIFTUP}")
+		$wTit = WinGetTitle("[ACTIVE]")
+		$SPA = StringInStr($wTit, "СПА")
+
 		If $SPA <> 0 Then
 ;~ 							Установка этапа работы
 			ControlClick($IrbisTit, "", "[CLASS:TToolBar; INSTANCE:1]", "left", 1, 176, 13)
@@ -105,13 +103,7 @@ EndFunc   ;==>Obrzv
 
 ;						CTRL+V Вставка. Вставляет в поле данные без раскрытия окна "Элемент"
 Func Vstavka()
-	$wTit = WinGetTitle("[ACTIVE]")
-	$isIrbis = StringInStr($wTit, $IrbisTit)
-	If $isIrbis = 0 Then
-		HotKeySet("^v")
-		Send("^v")
-		HotKeySet("^v", "Vstavka")
-	Else
+	If HotKeyOn("^v", "Vstavka") Then
 		Sleep(10)
 		Send("{CTRLDOWN}")
 		Sleep(10)
@@ -122,33 +114,15 @@ EndFunc   ;==>Vstavka
 
 ;						CTRL+S Сохранение записи в Ирбисе
 Func IrbSave()
-	$wTit = WinGetTitle("[ACTIVE]")
-	$isIrbis = StringInStr($wTit, $IrbisTit)
-	If $isIrbis = 0 Then
-		HotKeySet("^s")
-		Send("^s")
-		HotKeySet("^s", "IrbSave")
-	Else
+	If HotKeyOn("^s", "IrbSave") Then
 		Send("+{ENTER}")
-		Sleep(10)
-		Send("{CTRLDOWN}")
-		Sleep(10)
-		Send("{CTRLUP}")
 	EndIf
 EndFunc   ;==>IrbSave
 
-;						CTRL+Z Вывод нескольских инв. номеров. Ввести инв. номера и нажать TAB
+;						CTRL+Z Вывод нескольких инв. номеров. Ввести инв. номера и нажать TAB
 Func SearchNumbs()
+	If HotKeyOn("^z", "SearchNumbs") Then
 
-
-	$wTit = WinGetTitle("[ACTIVE]")
-	$isIrbis = StringInStr($wTit, $IrbisTit)
-	If $isIrbis = 0 Then
-		HotKeySet("^z")
-		Send("^z")
-		HotKeySet("^z", "SearchNumbs")
-
-	Else
 ;~ 		Фокус на рабочем листе
 		ControlFocus($IrbisTit, "", "[CLASS:TTntStringGrid.UnicodeClass; INSTANCE:3]")
 ;~ 		Получение названия базы и сравнение
@@ -214,19 +188,7 @@ EndFunc   ;==>SearchNumbs
 ;						CTRL+Q Разные команды. Читает введенную строку и выполняет команды
 Func Field()
 
-
-	$wTit = WinGetTitle("[ACTIVE]")
-	$isIrbis = StringInStr($wTit, $IrbisTit)
-	If $isIrbis = 0 Then
-		HotKeySet("^q")
-		Send("^q")
-		HotKeySet("^q", "Field")
-	Else
-
-		Sleep(10)
-		Send("{CTRLDOWN}")
-		Sleep(10)
-		Send("{CTRLUP}")
+	If HotKeyOn("^q", "Field") Then
 		_WinAPI_SetKeyboardLayout(WinGetHandle(AutoItWinGetTitle()), 0x0419)
 		$input = InputBox("Выполнить", "Название поля:", "", "", 190, 130)
 		_WinAPI_SetKeyboardLayout(WinGetHandle(AutoItWinGetTitle()), 0x0409)
@@ -277,7 +239,7 @@ Func Field()
 						Case "прк" ; "прк" - этап работы ПРК
 ;~ 							Получение названия текущей базы и сравнение
 							$bdName = ControlGetText($IrbisTit, "", "[CLASS:THSHintComboBox; INSTANCE:4]")
-							$isDisBD = StringInStr($bdName, "DST - Диссертационная база МДА")
+							$isDSTBD = StringInStr($bdName, "DST - Диссертационная база МДА")
 
 ;~ 							Вызов окна личных параметров
 							ControlClick($IrbisTit, "", "[CLASS:TToolBar; INSTANCE:1]", "left", 1, 176, 13)
@@ -289,7 +251,7 @@ Func Field()
 								$hWnd1 = WinWaitActive('"Этап работы"', "", 5)
 								If $hWnd1 Then
 ;~ 									Если это база диссертаций, установка этапа работы КР
-									If $isDisBD Then
+									If $isDSTBD Then
 										Send("{HOME}{PGDN}{DOWN 3}{ENTER}")
 									Else
 										Send("{HOME}{PGDN}{DOWN 2}{ENTER}")
@@ -303,7 +265,7 @@ Func Field()
 						Case "кр" ; "кр" - этап работы КР
 ;~ 							Получение названия текущей базы и сравнение
 							$bdName = ControlGetText($IrbisTit, "", "[CLASS:THSHintComboBox; INSTANCE:4]")
-							$isDisBD = StringInStr($bdName, "DST - Диссертационная база МДА")
+							$isDSTBD = StringInStr($bdName, "DST - Диссертационная база МДА")
 
 ;~ 							Вызов окна личных параметров
 							ControlClick($IrbisTit, "", "[CLASS:TToolBar; INSTANCE:1]", "left", 1, 176, 13)
@@ -315,7 +277,7 @@ Func Field()
 								$hWnd1 = WinWaitActive('"Этап работы"', "", 5)
 								If $hWnd1 Then
 ;~ 									Если это база диссертаций, установка этапа работы КР
-									If $isDisBD Then
+									If $isDSTBD Then
 										Send("{HOME}{PGDN}{DOWN 3}{ENTER}")
 									Else
 										Send("{HOME}{PGDN}{DOWN}{ENTER}")
@@ -396,7 +358,7 @@ Func Field()
 							If OpenElement(702) Then
 								Send("{ENTER}")
 							EndIf
-						Case "кол" ; "кол" - 700 поле, другие коллективы
+						Case "кол" ; "кол" - другие коллективы, не входящие в заголовок описания
 							If OpenElement(711) Then
 								Send("{ENTER}")
 							EndIf
@@ -805,6 +767,12 @@ Func Field()
 							_Word_DocOpen($oWord, "d:\dESCTOP\СканКоп.rtf")
 							Local $hWnd = WinWait("[CLASS:OpusApp]", "", 10)
 							WinActivate($hWnd)
+						Case "веб" ; "веб" - Электронный каталог IRBIS 2.0
+							Opt("WinTitleMatchMode", 2)
+
+							$path = @ProgramFilesDir & "\Mozilla Firefox\firefox.exe"
+							$url = "http://194.169.10.3/jirbis2/index.php?option=com_irbis&view=irbis&Itemid=108"
+							Run($path & " " & $url, "", @SW_MAXIMIZE)
 
 
 							; 			5) Рубрики. Открытие файлов с таблицами рубрик - индекс МДА без тире ("а0"). История России - "б8р", Рус. лит-ра - "г3р".
@@ -1084,13 +1052,8 @@ EndFunc   ;==>Field
 
 ;						CTRL+F Поиск по виду основного словаря. Читает введенную строку и выполняет поиск
 Func Search()
-	$wTit = WinGetTitle("[ACTIVE]")
-	$isIrbis = StringInStr($wTit, $IrbisTit)
-	If $isIrbis = 0 Then
-		HotKeySet("^f")
-		Send("^f")
-		HotKeySet("^f", "Search")
-	Else
+	If HotKeyOn("^f", "Search") Then
+
 		Sleep(10)
 		Send("{CTRLDOWN}")
 		Sleep(10)
@@ -1169,13 +1132,7 @@ EndFunc   ;==>Search
 ;						ALT+H Последовательный поиск
 ; Ввести значение. Нажать TAB и ввести номер поля. Нажать еще раз TAB и выбрать уточняемый запрос. Нажать ENTER
 Func CohSearch()
-	$wTit = WinGetTitle("[ACTIVE]")
-	$isIrbis = StringInStr($wTit, $IrbisTit)
-	If $isIrbis = 0 Then
-		HotKeySet("!h")
-		Send("!h")
-		HotKeySet("!h", "CohSearch")
-	Else
+	If HotKeyOn("!h", "CohSearch") Then
 		ControlClick($IrbisTit, "", "[CLASS:TToolBar; INSTANCE:3]", "left", 1, 80, 11)
 		Sleep(100)
 		ControlClick("Последовательный", "", "[CLASS:TTabbedNotebook; INSTANCE:1]", "left", 2, 155, 12)
@@ -1211,285 +1168,26 @@ Func CohSearch()
 EndFunc   ;==>CohSearch
 
 ;						CTRL+W Печать основной карточки. Открытие существующего файла (путь: c:\irbiswrk\) или создание нового.
-Func Osn()
-
-
-	$wTit = WinGetTitle("[ACTIVE]")
-	$isIrbis = StringInStr($wTit, $IrbisTit)
-	If $isIrbis = 0 Then
-		HotKeySet("^w")
-		Send("^w")
-		HotKeySet("^w", "Osn")
-	Else
-		_WinAPI_SetKeyboardLayout(WinGetHandle(AutoItWinGetTitle()), 0x0409)
-
-		Sleep(10)
-		Send("{CTRLDOWN}")
-		Sleep(10)
-		Send("{CTRLUP}")
-
-		;**** Открытие существующего файла
-		$invNum = GetInvNum()
-		$filePath = "c:\irbiswrk\" & $invNum & ".RTF"
-		$SecondfilePath = "c:\irbiswrk\Сделаны\" & $invNum & ".RTF"
-		If FileExists($filePath) Or FileExists($SecondfilePath) Then
-			$ans = MsgBox(67, "Внимание", "Файл существует. Открыть его?")
-			If $ans = 6 Then
-				If FileExists($filePath) Then
-					Local $oWord = _Word_Create()
-					_Word_DocOpen($oWord, $filePath)
-					Local $hWnd = WinWait("[CLASS:OpusApp]", "", 10)
-					WinActivate($hWnd)
-
-				ElseIf FileExists($SecondfilePath) Then
-					Local $oWord = _Word_Create()
-					_Word_DocOpen($oWord, $SecondfilePath)
-					Local $hWnd = WinWait("[CLASS:OpusApp]", "", 10)
-					WinActivate($hWnd)
-				EndIf
-			ElseIf $ans = 7 Then
-				PrintOsn($invNum)
-			EndIf
-		Else
-			PrintOsn($invNum)
-		EndIf
-	EndIf
-EndFunc   ;==>Osn
-
-;~ Функция печати основной карточки
-Func PrintOsn($invNum)
-	;**** Проверка на наличие автора
-	$autorExM = 0
-	$autorEx = 0
-	;**** в многотомнике
-	_WinAPI_SetKeyboardLayout(WinGetHandle(AutoItWinGetTitle()), 0x0409)
-	GoToField(961)
-	$hWnd = WinWaitActive("ОШИБКА", "", 1)
-	If $hWnd Then
-		WinClose("ОШИБКА")
-	Else
-		$wText = WinGetText($IrbisTit)
-		$autorExM = StringInStr($wText, "ДА")
-		If $autorExM > 0 Then
-			$autorExM = 1
-		Else
-			$autorExM = 2
-		EndIf
-	EndIf
-
-	;**** в однотомнике
-
-	GoToField(700)
-	$wText = WinGetText($IrbisTit)
-	$autorEx = StringInStr($wText, "A")
-
-	If $autorEx > 0 Then
-		$autorEx = 1
-	Else
-		$autorEx = 0
-	EndIf
-
-	ControlClick($IrbisTit, "", "[CLASS:TToolBar; INSTANCE:1]", "left", 1, 34, 12)
-	$hWnd = WinWaitActive("Печать", "", 5)
-	If $hWnd Then
-		ControlSend("Печать", "", "[CLASS:THSHintComboBox; INSTANCE:1]", "{HOME}" & "{DOWN 7}")
-		Sleep(200)
-		ControlClick("Печать", "", "[CLASS:TBitBtn; INSTANCE:2]", "left", 2)
-	EndIf
-	$hWnd = WinWaitActive("Файл", "", 5)
-	If $hWnd Then
-		ControlSend("Файл", "", "[CLASS:Edit; INSTANCE:1]", $invNum)
-		Send("{TAB 2}" & "{ENTER}")
-	EndIf
-
-	If WinWaitActive("Подтвердить сохранение в виде", "", 1) Then
-		ControlClick("Подтвердить сохранение в виде", "", "[CLASS:Button; INSTANCE:1]")
-	EndIf
-	$hWnd = WinWaitActive("Внимание", "", 5)
-	If $hWnd Then
-		ControlClick("Внимание", "", "[CLASS:Button; INSTANCE:1]")
-	EndIf
-	$hWnd = WinWaitActive("[CLASS:OpusApp]", "", 5)
-	If $hWnd Then
-		WinClose("Печать текущего")
-		$Object = ObjGet("", "Word.Application")
-
-		If $autorExM = 2 And $autorEx = 1 Then
-			$Object.Run("Макрос2")
-		ElseIf $autorExM = 1 Or $autorEx = 1 Then
-			$Object.Run("Макрос1")
-		Else
-			$Object.Run("Макрос2")
-		EndIf
-	EndIf
-EndFunc   ;==>PrintOsn
 
 ;						CTRL+K Печать контрольной карточки
-Func KK()
-
-
-	$wTit = WinGetTitle("[ACTIVE]")
-	$isIrbis = StringInStr($wTit, $IrbisTit)
-	If $isIrbis = 0 Then
-		HotKeySet("^k")
-		Send("^k")
-		HotKeySet("^k", "KK")
-	Else
-		Sleep(10)
-		Send("{CTRLDOWN}")
-		Sleep(10)
-		Send("{CTRLUP}")
-
-		WinActivate($IrbisTit)
-		ControlFocus($IrbisTit, "", "[CLASS:TTntStringGrid.UnicodeClass; INSTANCE:3]")
-		ControlClick($IrbisTit, "", "[CLASS:TToolBar; INSTANCE:1]", "left", 1, 11, 12)
-		$hWnd1 = WinWaitActive("Печать", "", 5)
-		If $hWnd1 Then
-			ControlSend("Печать", "", "[CLASS:THSHintComboBox; INSTANCE:1]", "{HOME}" & "{DOWN 10}")
-			ControlClick("Печать", "", "[CLASS:TBitBtn; INSTANCE:2]")
-		EndIf
-		$hWnd1 = WinWaitActive("Файл", "", 5)
-		If $hWnd1 Then
-			$numDoc = 1
-			If WinExists("1 [Режим") Then
-				If WinExists("2 [Режим") Then
-					$numDoc = 3
-				Else
-					$numDoc = 2
-				EndIf
-			EndIf
-			ControlSend("Файл", "", "[CLASS:Edit; INSTANCE:1]", $numDoc)
-			Send("{TAB 2}" & "{ENTER}")
-		EndIf
-		$hWnd1 = WinWaitActive("Подтвердить", "", 5)
-		If $hWnd1 Then
-			ControlClick("Подтвердить", "", "[CLASS:Button; INSTANCE:1]")
-		EndIf
-
-		$hWnd1 = WinWaitActive("Внимание", "", 5)
-		If $hWnd1 Then
-			ControlClick("Внимание", "", "[CLASS:Button; INSTANCE:1]")
-		EndIf
-
-
-		$hWnd1 = WinWaitActive("[CLASS:OpusApp]", "", 10)
-		If $hWnd1 Then
-			WinClose("Печать выходных форм - Результат поиска")
-			$Object = ObjGet("", "Word.Application")
-			$Object.Run("KK")
-
-		EndIf
-	EndIf
-EndFunc   ;==>KK
 
 ;						CTRL+D Печать формуляра
-Func Formular()
-
-
-	$wTit = WinGetTitle("[ACTIVE]")
-	$isIrbis = StringInStr($wTit, $IrbisTit)
-	If $isIrbis = 0 Then
-		HotKeySet("^d")
-		Send("^d")
-		HotKeySet("^d", "Formular")
-	Else
-		Sleep(10)
-		Send("{CTRLDOWN}")
-		Sleep(10)
-		Send("{CTRLUP}")
-		WinActivate($IrbisTit)
-		ControlClick($IrbisTit, "", "[CLASS:TToolBar; INSTANCE:1]", "left", 1, 11, 12)
-		$hWnd1 = WinWaitActive("Печать", "", 5)
-		If $hWnd1 Then
-			ControlSend("Печать", "", "[CLASS:THSHintComboBox; INSTANCE:1]", "{HOME}" & "{DOWN 4}")
-			Sleep(200)
-			ControlClick("Печать", "", "[CLASS:TBitBtn; INSTANCE:2]")
-		EndIf
-		$hWnd1 = WinWaitActive("Файл", "", 5)
-		If $hWnd1 Then
-			$numDoc = 1
-			If WinExists("1 [Режим") Then
-				If WinExists("2 [Режим") Then
-					$numDoc = 3
-				Else
-					$numDoc = 2
-				EndIf
-			EndIf
-			ControlSend("Файл", "", "[CLASS:Edit; INSTANCE:1]", $numDoc)
-			Send("{TAB 2}" & "{ENTER}")
-		EndIf
-		$hWnd1 = WinWaitActive("Подтвердить", "", 5)
-		If $hWnd1 Then
-			ControlClick("Подтвердить", "", "[CLASS:Button; INSTANCE:1]")
-		EndIf
-		$hWnd1 = WinWaitActive("Внимание", "", 5)
-		If $hWnd1 Then
-			ControlClick("Внимание", "", "[CLASS:Button; INSTANCE:1]")
-		EndIf
-
-		$hWnd1 = WinWaitActive("[CLASS:OpusApp]", "", 5)
-		If $hWnd1 Then
-			$Object = ObjGet("", "Word.Application")
-			WinClose("Печать выходных форм - Результат поиска")
-			$Object.Run("Formular")
-		EndIf
-	EndIf
-EndFunc   ;==>Formular
 
 ;						CTRL+Y Печать ярлычка
-Func Label()
 
-
+;						CTRL+M Печать ярлычка для мягких формуляров
+Func FormularLabel()
 	$wTit = WinGetTitle("[ACTIVE]")
 	$isIrbis = StringInStr($wTit, $IrbisTit)
 	If $isIrbis = 0 Then
-		HotKeySet("^y")
-		Send("^y")
-		HotKeySet("^y", "Label")
+		HotKeySet("^+m")
+		Send("^+m")
+		HotKeySet("^+m", "FormularLabel")
 	Else
-		Sleep(10)
-		Send("{CTRLDOWN}")
-		Sleep(10)
-		Send("{CTRLUP}")
-		WinActivate($IrbisTit)
-		ControlFocus($IrbisTit, "", "[CLASS:TTntStringGrid.UnicodeClass; INSTANCE:3]")
-		ControlClick($IrbisTit, "", "[CLASS:TToolBar; INSTANCE:1]", "left", 1, 11, 12)
-		$hWnd1 = WinWaitActive("Печать", "", 5)
-		If $hWnd1 Then
-			ControlSend("Печать", "", "[CLASS:THSHintComboBox; INSTANCE:1]", "{HOME}" & "{DOWN 3}")
-			Sleep(200)
-			ControlClick("Печать", "", "[CLASS:TBitBtn; INSTANCE:2]")
-		EndIf
-		$hWnd1 = WinWaitActive("Файл", "", 5)
-		If $hWnd1 Then
-			$numDoc = 1
-			If WinExists("1 [Режим") Then
-				If WinExists("2 [Режим") Then
-					$numDoc = 3
-				Else
-					$numDoc = 2
-				EndIf
-			EndIf
-			ControlSend("Файл", "", "[CLASS:Edit; INSTANCE:1]", $numDoc)
-			Send("{TAB 2}" & "{ENTER}")
-		EndIf
-		$hWnd1 = WinWaitActive("Подтвердить", "", 5)
-		If $hWnd1 Then
-			ControlClick("Подтвердить", "", "[CLASS:Button; INSTANCE:1]")
-		EndIf
-		$hWnd1 = WinWaitActive("Внимание", "", 5)
-		If $hWnd1 Then
-			ControlClick("Внимание", "", "[CLASS:Button; INSTANCE:1]")
-		EndIf
-
-		$hWnd1 = WinWaitActive("[CLASS:OpusApp]", "", 5)
-		If $hWnd1 Then
-			$Object = ObjGet("", "Word.Application")
-			WinClose("Печать выходных форм - Результат поиска")
-			$Object.Run("Label_2")
-		EndIf
+;~ 		Print("formularLabel")
 	EndIf
-EndFunc   ;==>Label
+EndFunc   ;==>FormularLabel
+
 
 ;						CTRL+F8 Закрепить окно поверх всех
 Func OnTop()
@@ -1514,115 +1212,46 @@ Func OnTopOff()
 	WinSetOnTop($hWnd, "", 0)
 EndFunc   ;==>OnTopOff
 
-;						CTRL+M Печать ярлычка для мягких формуляров
-Func FormularLabel()
-
-
-	$wTit = WinGetTitle("[ACTIVE]")
-	$isIrbis = StringInStr($wTit, $IrbisTit)
-	If $isIrbis = 0 Then
-		HotKeySet("^+m")
-		Send("^+m")
-		HotKeySet("^+m", "FormularLabel")
-	Else
-		Sleep(10)
-		Send("{CTRLDOWN}")
-		Sleep(10)
-		Send("{CTRLUP}")
-		WinActivate($IrbisTit)
-		ControlFocus($IrbisTit, "", "[CLASS:TTntStringGrid.UnicodeClass; INSTANCE:3]")
-		ControlClick($IrbisTit, "", "[CLASS:TToolBar; INSTANCE:1]", "left", 1, 11, 12)
-		$hWnd1 = WinWaitActive("Печать", "", 5)
-		If $hWnd1 Then
-			ControlSend("Печать", "", "[CLASS:THSHintComboBox; INSTANCE:1]", "{HOME}" & "{DOWN 5}")
-			Sleep(200)
-			ControlClick("Печать", "", "[CLASS:TBitBtn; INSTANCE:2]")
-		EndIf
-		$hWnd1 = WinWaitActive("Файл", "", 5)
-		If $hWnd1 Then
-			$numDoc = 1
-			If WinExists("1 [Режим") Then
-				If WinExists("2 [Режим") Then
-					$numDoc = 3
-				Else
-					$numDoc = 2
-				EndIf
-			EndIf
-			ControlSend("Файл", "", "[CLASS:Edit; INSTANCE:1]", $numDoc)
-			Send("{TAB 2}" & "{ENTER}")
-		EndIf
-		$hWnd1 = WinWaitActive("Подтвердить", "", 5)
-		If $hWnd1 Then
-			ControlClick("Подтвердить", "", "[CLASS:Button; INSTANCE:1]")
-		EndIf
-		$hWnd1 = WinWaitActive("Внимание", "", 5)
-		If $hWnd1 Then
-			ControlClick("Внимание", "", "[CLASS:Button; INSTANCE:1]")
-		EndIf
-		$hWnd1 = WinWaitActive("[CLASS:OpusApp]", "", 5)
-		If $hWnd1 Then
-			WinClose("Печать выходных форм - Результат поиска")
-		EndIf
-	EndIf
-EndFunc   ;==>FormularLabel
-
 ;						CTRL+SPACE Фокус на окне полного описания
 Func ViewFocus()
-	$wTit = WinGetTitle("[ACTIVE]")
-	$isIrbis = StringInStr($wTit, $IrbisTit)
-	If $isIrbis = 0 Then
-		HotKeySet("^{SPACE}")
-		Send("^{SPACE}")
-		HotKeySet("^{SPACE}", "ViewFocus")
-	Else
-		Sleep(10)
-		Send("{CTRLDOWN}")
-		Sleep(10)
-		Send("{CTRLUP}")
+	If HotKeyOn("^{SPACE}", "ViewFocus") Then
 		ControlClick($IrbisTit, "", "[CLASS:Internet Explorer_Server; INSTANCE:1]", "left", 1, 1034, 25)
 	EndIf
 EndFunc   ;==>ViewFocus
 
 ;						CTRL+SHIFT+K Копировать отмеченные поля в буферную запись
 Func CopySelected()
-	$wTit = WinGetTitle("[ACTIVE]")
-	$isIrbis = StringInStr($wTit, $IrbisTit)
-	If $isIrbis = 0 Then
-		HotKeySet("^+k")
-		Send("^+k")
-		HotKeySet("^+k", "CopySelected")
-	Else
+	If HotKeyOn("^+k", "CopySelected") Then
 		Sleep(10)
-		Send("{CTRLDOWN}")
+		Send("{SHIFTDOWN}")
 		Sleep(10)
-		Send("{CTRLUP}")
-		Sleep(10)
+		Send("{SHIFTUP}")
 		ControlFocus($IrbisTit, "", "[CLASS:TTntStringGrid.UnicodeClass; INSTANCE:3]")
 		Sleep(100)
 		Send("{APPSKEY}{UP 8}{ENTER}")
 	EndIf
 EndFunc   ;==>CopySelected
 
-;~ Функция перехода на поле по номеру
+;~ Переход на поле по номеру
 Func GoToField($com)
 	Send("!q")
 	Sleep(100)
 	Send($com & "{ENTER}")
 EndFunc   ;==>GoToField
 
-;~ Функция раскрытия поля при нажатии F2
+;~ Раскрытие поля при нажатии F2
 Func OpenElement($com)
 	Send("!q")
 	Sleep(100)
 	Send($com & "{ENTER}" & "{F2}")
 	$hWnd = WinWaitActive('Элемент: "' & $com, "", 5)
 	If $hWnd Then
-		ControlClick($hWnd, "", "[CLASS:TTntRichEdit.UnicodeClass; INSTANCE:1]", "left", 1, 12, 12)
+		ControlClick($hWnd, "", "[CLASS:TTntRichEdit.UnicodeClass; INSTANCE:1]", "left", 1, 1, 1)
 		Return $hWnd
 	EndIf
 EndFunc   ;==>OpenElement
 
-;~ Функция раскрытия поля при нажатии F3
+;~ Раскрытие поля при нажатии F3
 Func OpenElementF3($com)
 	Send("!q")
 	Sleep(100)
@@ -1634,7 +1263,7 @@ Func OpenElementF3($com)
 	EndIf
 EndFunc   ;==>OpenElementF3
 
-;~ Функция получения инв. номера
+;~ Получение инв. номера
 Func GetInvNum()
 	WinActivate($IrbisTit)
 	$hWnd = WinWaitActive($IrbisTit, "", 5)
@@ -1649,7 +1278,7 @@ Func GetInvNum()
 	EndIf
 EndFunc   ;==>GetInvNum
 
-;~ Функция изменения вида словаря
+;~ Изменение вида словаря
 Func Srchfor($srch)
 	Send("!f")
 	If WinWaitActive("Вид основного словаря", "", 5) Then
@@ -1663,7 +1292,7 @@ Func Srchfor($srch)
 
 EndFunc   ;==>Srchfor
 
-;~ Функция изменения вида словаря с вставкой последующих за командой строк
+;~ Изменение вида словаря с вставкой последующих за командой строк
 Func SrchforEx($srch, $SPLIT)
 	Send("!f")
 	If WinWaitActive("Вид основного словаря", "", 5) Then
@@ -1691,7 +1320,7 @@ Func SrchforEx($srch, $SPLIT)
 
 EndFunc   ;==>SrchforEx
 
-;~ Функция использования буфера обмена с сохранением текущего состояния буфера
+;~ Использование буфера обмена с сохранением текущего состояния буфера
 Func ClipMan($com)
 	$clip = ClipGet()
 	ClipPut($com)
@@ -1699,7 +1328,7 @@ Func ClipMan($com)
 	ClipPut($clip)
 EndFunc   ;==>ClipMan
 
-;~ 		Проверка введенной строки
+;~ Проверка введенной строки
 Func TestInput($input)
 ;~ 		Размер строки длиннее 100 символов
 	If StringLen($input) > 100 Then
@@ -1724,3 +1353,179 @@ Func TestInput($input)
 	Return $SPLIT
 EndFunc   ;==>TestInput
 
+;~ Вывод на печать
+Func Print()
+	If HotKeyOn(@HotKeyPressed, "Print") Then
+		_WinAPI_SetKeyboardLayout(WinGetHandle(AutoItWinGetTitle()), 0x0409)
+;~ 		Получение названия базы и сравнение
+		$bdName = ControlGetText($IrbisTit, "", "[CLASS:THSHintComboBox; INSTANCE:4]")
+		$isMPDABD = StringInStr($bdName, "MPDA - Московская Православная Духовная Академия")
+		$isDSTBD = StringInStr($bdName, "DST - Диссертационная база МДА")
+		$isPRBD = StringInStr($bdName, "PR - Периодические издания (с 2014 г.)")
+		$cancel = 1
+		Switch @HotKeyPressed
+			Case "^w"
+				If $isMPDABD Then
+					$count = 9
+				ElseIf $isDSTBD Then
+					$count = 5
+				ElseIf $isPRBD Then
+					$count = 1
+				Else
+					$cancel = 0
+				EndIf
+				$invNum = GetInvNum()
+				$filePath = "c:\irbiswrk\" & $invNum & ".RTF"
+				$SecondfilePath = "c:\irbiswrk\Сделаны\" & $invNum & ".RTF"
+				If FileExists($filePath) Or FileExists($SecondfilePath) Then
+					$ans = MsgBox(67, "Внимание", "Файл существует. Открыть его?")
+					If $ans = 6 Then
+						$cancel = 0
+						If FileExists($filePath) Then
+							Local $oWord = _Word_Create()
+							_Word_DocOpen($oWord, $filePath)
+							Local $hWnd = WinWait("[CLASS:OpusApp]", "", 10)
+							WinActivate($hWnd)
+
+						ElseIf FileExists($SecondfilePath) Then
+							Local $oWord = _Word_Create()
+							_Word_DocOpen($oWord, $SecondfilePath)
+							Local $hWnd = WinWait("[CLASS:OpusApp]", "", 10)
+							WinActivate($hWnd)
+						EndIf
+					ElseIf $ans = 7 Then
+						$cancel = 1
+					Else
+						$cancel = 0
+					EndIf
+				EndIf
+				If $isPRBD Then
+					$macro = ''
+				Else
+					$macro = "Макрос1"
+				EndIf
+
+			Case "^k"
+				If $isMPDABD Then
+					$count = 12
+				ElseIf $isDSTBD Then
+					$count = 10
+				Else
+					$cancel = 0
+				EndIf
+				$macro = "KK"
+
+			Case "^d"
+				$count = 6
+				If $isMPDABD Then
+					$count = 6
+				ElseIf $isDSTBD Then
+					$count = 4
+				Else
+					$cancel = 0
+				EndIf
+				$macro = "Formular"
+
+			Case "^y"
+				GoToField(920)
+				$text = WinGetText($IrbisTit)
+				If $isMPDABD Then
+					If StringInStr($text, "SPEC") Then
+						$ans = MsgBox(67, "Внимание", "Печатать номера томов?")
+						If $ans = 6 Then
+							$count = 3
+						ElseIf $ans = 7 Then
+							$count = 4
+						Else
+							$cancel = 0
+						EndIf
+					Else
+						$count = 3
+					EndIf
+				ElseIf $isDSTBD Then
+					$count = 3
+				Else
+					$cancel = 0
+				EndIf
+				$macro = "Label_2"
+
+			Case "^m"
+				If $isMPDABD Then
+					$count = 5
+					$macro = ''
+				Else
+					$cancel = 0
+				EndIf
+		EndSwitch
+
+		If $cancel Then
+			WinActivate($IrbisTit)
+			ControlFocus($IrbisTit, "", "[CLASS:TTntStringGrid.UnicodeClass; INSTANCE:3]")
+			If @HotKeyPressed == "^w" And $isPRBD = 0 Then
+				ControlClick($IrbisTit, "", "[CLASS:TToolBar; INSTANCE:1]", "left", 1, 34, 12)
+			Else
+				ControlClick($IrbisTit, "", "[CLASS:TToolBar; INSTANCE:1]", "left", 1, 11, 12)
+			EndIf
+			$hWnd1 = WinWaitActive("Печать", "", 5)
+			If $hWnd1 Then
+				ControlSend("Печать", "", "[CLASS:THSHintComboBox; INSTANCE:1]", "{HOME}")
+				For $i = 1 To $count
+					ControlSend("Печать", "", "[CLASS:THSHintComboBox; INSTANCE:1]", "{DOWN}")
+				Next
+				ControlClick("Печать", "", "[CLASS:TBitBtn; INSTANCE:2]")
+			EndIf
+			$hWnd1 = WinWaitActive("Файл", "", 5)
+			If $hWnd1 Then
+				If @HotKeyPressed == "^w" And $isPRBD = 0 Then
+					ControlSend("Файл", "", "[CLASS:Edit; INSTANCE:1]", $invNum)
+				Else
+					$numDoc = 1
+					If WinExists("1 [Режим") Then
+						If WinExists("2 [Режим") Then
+							$numDoc = 3
+						Else
+							$numDoc = 2
+						EndIf
+					EndIf
+					ControlSend("Файл", "", "[CLASS:Edit; INSTANCE:1]", $numDoc)
+				EndIf
+				Send("{TAB 2}" & "{ENTER}")
+			EndIf
+			$hWnd1 = WinWaitActive("Подтвердить", "", 1)
+			If $hWnd1 Then
+				ControlClick("Подтвердить", "", "[CLASS:Button; INSTANCE:1]")
+			EndIf
+
+			$hWnd1 = WinWaitActive("Внимание", "", 5)
+			If $hWnd1 Then
+				ControlClick("Внимание", "", "[CLASS:Button; INSTANCE:1]")
+			EndIf
+			If $macro <> '' Then
+				$hWnd1 = WinWaitActive("[CLASS:OpusApp]", "", 10)
+				If $hWnd1 Then
+					WinClose("Печать")
+					$Object = ObjGet("", "Word.Application")
+					$Object.Run($macro)
+				EndIf
+			Else
+				WinClose("Печать")
+			EndIf
+		EndIf
+	EndIf
+EndFunc   ;==>Print
+
+;~ Отключение сочетаний клавиш в других приложениях
+Func HotKeyOn($send, $func)
+	If WinGetHandle("[ACTIVE]") == WinGetHandle($IrbisTit) Then
+		Sleep(10)
+		Send("{CTRLDOWN}")
+		Sleep(10)
+		Send("{CTRLUP}")
+		Return True
+	Else
+		HotKeySet($send)
+		Send($send)
+		HotKeySet($send, $func)
+		Return False
+	EndIf
+EndFunc   ;==>HotKeyOn
