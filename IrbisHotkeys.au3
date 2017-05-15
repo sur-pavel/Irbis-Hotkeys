@@ -53,6 +53,7 @@ Func ScrExit()
 EndFunc   ;==>ScrExit
 Func Obrzv()
 	If HotKeyOn("^+g", "Obrzv") Then
+		;~ 		Предотвращение залипания SHIFT'a
 		Sleep(10)
 		Send("{SHIFTDOWN}")
 		Sleep(10)
@@ -90,7 +91,8 @@ Func Obrzv()
 
 				$gWnd = WinWaitActive("Открытие", "", 3)
 				If $gWnd Then
-					Send("{!}{!}КР-ФЛК" & "{DOWN}" & "{ENTER}")
+					ClipMan("!!КР-ФЛК")
+					Send("{DOWN}" & "{ENTER}")
 					ControlClick($glW, "", "[CLASS:TButton; INSTANCE:5]")
 				EndIf
 ;~ 				Перезапуск скрипта - временное решение бага с отключением CTRL
@@ -196,7 +198,7 @@ Func Field()
 			$input = "error"
 		EndIf
 		If WinWaitActive($IrbisTit, "", 5) Then
-
+			ControlFocus($IrbisTit, "", "[CLASS:TTntStringGrid.UnicodeClass; INSTANCE:3]")
 
 			;**** Пути до рубрик
 			$sPath_ini = @ScriptDir & "\IrbisHotkeys.ini"
@@ -744,9 +746,9 @@ Func Field()
 
 							; 			4) Справочники
 						Case "рпк" ; "рпк" - Рос. правила кат-ции, файл должен быть по пути d:\РПК.pdf
-							Run(@ProgramFilesDir & "\Adobe\Acrobat Reader DC\Reader\AcroRd32.exe d:\РПК.pdf")
+							Run ("RunDLL32.EXE shell32.dll,ShellExec_RunDLL d:\РПК.pdf")
 						Case "сокр"
-							Run("c:\Program Files\Adobe\Acrobat Reader DC\Reader\AcroRd32.exe d:\dESCTOP\ГОСТ_7.0.12-2011_Сокращ_слов.pdf")
+							Run ("RunDLL32.EXE shell32.dll,ShellExec_RunDLL d:\dESCTOP\ГОСТ_7.0.12-2011_Сокращ_слов.pdf")
 						Case "инс"
 							Local $oWord = _Word_Create()
 							_Word_DocOpen($oWord, "d:\dESCTOP\Инструкции (запись диак. Павла).doc")
@@ -1222,6 +1224,7 @@ EndFunc   ;==>ViewFocus
 ;						CTRL+SHIFT+K Копировать отмеченные поля в буферную запись
 Func CopySelected()
 	If HotKeyOn("^+k", "CopySelected") Then
+		;~ 		Предотвращение залипания SHIFT'a
 		Sleep(10)
 		Send("{SHIFTDOWN}")
 		Sleep(10)
@@ -1517,6 +1520,8 @@ EndFunc   ;==>Print
 ;~ Отключение сочетаний клавиш в других приложениях
 Func HotKeyOn($send, $func)
 	If WinGetHandle("[ACTIVE]") == WinGetHandle($IrbisTit) Then
+
+;~ 		Предотвращение залипания CTRL'a
 		Sleep(10)
 		Send("{CTRLDOWN}")
 		Sleep(10)
