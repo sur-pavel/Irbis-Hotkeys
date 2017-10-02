@@ -53,7 +53,7 @@ Func ScrExit()
 EndFunc   ;==>ScrExit
 Func Obrzv()
 	If HotKeyOn("^+g", "Obrzv") Then
-		;~ 		Предотвращение залипания SHIFT'a
+;~ 		Предотвращение залипания SHIFT'a
 		Sleep(10)
 		Send("{SHIFTDOWN}")
 		Sleep(10)
@@ -91,7 +91,7 @@ Func Obrzv()
 
 				$gWnd = WinWaitActive("Открытие", "", 3)
 				If $gWnd Then
-					ClipMan("!!КР-ФЛК")
+					ClipMan("!!КР-ФЛК.gbl")
 					Send("{DOWN}" & "{ENTER}")
 					ControlClick($glW, "", "[CLASS:TButton; INSTANCE:5]")
 				EndIf
@@ -198,7 +198,6 @@ Func Field()
 			$input = "error"
 		EndIf
 		If WinWaitActive($IrbisTit, "", 5) Then
-			ControlFocus($IrbisTit, "", "[CLASS:TTntStringGrid.UnicodeClass; INSTANCE:3]")
 
 			;**** Пути до рубрик
 			$sPath_ini = @ScriptDir & "\IrbisHotkeys.ini"
@@ -394,9 +393,11 @@ Func Field()
 							EndIf
 						Case "прим" ; "прим" - общие примечания однотомника
 							GoToField(300)
+						Case "яз" ; "яз" - примечания о языке
+							GoToField(912)
 						Case "супо" ; "супо" - вставка в общ. примеч. "Изд. в суперобл."
 							GoToField(300)
-							Send("Изд. в суперобл.")
+							ClipMan("Изд. в суперобл.")
 						Case "разн" ; "разн" - разночтение заглавий
 							If OpenElement(517) Then
 								Send("{DOWN 2}")
@@ -421,6 +422,13 @@ Func Field()
 							OpenElement(600)
 						Case "стр" ; "стр" - количеств. хар-ки
 							OpenElement(215)
+						Case "тир" ; "стр" - количеств. хар-ки
+							If OpenElement(215) Then
+								Send("{PGDN}")
+								Sleep(100)
+								Send("{UP}")
+							EndIf
+
 						Case "мзаг" ; "мзаг" - заглавие многотомника
 							OpenElement(461)
 						Case "мавт" ; "мавт" - автор многотомника или первый редактор
@@ -724,31 +732,21 @@ Func Field()
 
 							; 			3) Переход по базам
 						Case "журн" ; "журн" - Периодические издания с 2014 г.
-							_WinAPI_SetKeyboardLayout(WinGetHandle(AutoItWinGetTitle()), 0x0419)
-							Send("{ALT}" & "{ENTER 2}" & "PR" & "{ENTER}")
-							_WinAPI_SetKeyboardLayout(WinGetHandle(AutoItWinGetTitle()), 0x0409)
+							ChangeBase("PR")
 						Case "мда" ; "мда" - база МПДА
-							_WinAPI_SetKeyboardLayout(WinGetHandle(AutoItWinGetTitle()), 0x0419)
-							Send("{ALT}" & "{ENTER 2}" & "MPDA" & "{ENTER}")
-							_WinAPI_SetKeyboardLayout(WinGetHandle(AutoItWinGetTitle()), 0x0409)
+							ChangeBase("MPDA")
 						Case "дис" ; "дис" - база диссертаций
-							_WinAPI_SetKeyboardLayout(WinGetHandle(AutoItWinGetTitle()), 0x0419)
-							Send("{ALT}" & "{ENTER 2}" & "DST" & "{ENTER}")
-							_WinAPI_SetKeyboardLayout(WinGetHandle(AutoItWinGetTitle()), 0x0409)
+							ChangeBase("DST")
 						Case "инос" ; "инос" или "ифн" - фонд на иностранных языках
-							_WinAPI_SetKeyboardLayout(WinGetHandle(AutoItWinGetTitle()), 0x0419)
-							Send("{ALT}" & "{ENTER 2}" & "IFN" & "{ENTER}")
-							_WinAPI_SetKeyboardLayout(WinGetHandle(AutoItWinGetTitle()), 0x0409)
+							ChangeBase("IFN")
 						Case "ифн"
-							_WinAPI_SetKeyboardLayout(WinGetHandle(AutoItWinGetTitle()), 0x0419)
-							Send("{ALT}" & "{ENTER 2}" & "IFN" & "{ENTER}")
-							_WinAPI_SetKeyboardLayout(WinGetHandle(AutoItWinGetTitle()), 0x0409)
+							ChangeBase("IFN")
 
 							; 			4) Справочники
 						Case "рпк" ; "рпк" - Рос. правила кат-ции, файл должен быть по пути d:\РПК.pdf
-							Run ("RunDLL32.EXE shell32.dll,ShellExec_RunDLL d:\РПК.pdf")
+							Run("RunDLL32.EXE shell32.dll,ShellExec_RunDLL d:\РПК.pdf")
 						Case "сокр"
-							Run ("RunDLL32.EXE shell32.dll,ShellExec_RunDLL d:\dESCTOP\ГОСТ_7.0.12-2011_Сокращ_слов.pdf")
+							Run("RunDLL32.EXE shell32.dll,ShellExec_RunDLL d:\dESCTOP\ГОСТ_7.0.12-2011_Сокращ_слов.pdf")
 						Case "инс"
 							Local $oWord = _Word_Create()
 							_Word_DocOpen($oWord, "d:\dESCTOP\Инструкции (запись диак. Павла).doc")
@@ -1073,6 +1071,7 @@ Func Search()
 					$input = $SPLIT[1]
 				Else
 					$input = $inputTest
+					$SPLIT = 0
 				EndIf
 				; 			1. Если введенная строка - число, открытие записи в Ирбисе по инв. номеру
 				If StringIsInt($input) Then
@@ -1224,7 +1223,7 @@ EndFunc   ;==>ViewFocus
 ;						CTRL+SHIFT+K Копировать отмеченные поля в буферную запись
 Func CopySelected()
 	If HotKeyOn("^+k", "CopySelected") Then
-		;~ 		Предотвращение залипания SHIFT'a
+;~ 		Предотвращение залипания SHIFT'a
 		Sleep(10)
 		Send("{SHIFTDOWN}")
 		Sleep(10)
@@ -1300,24 +1299,28 @@ Func SrchforEx($srch, $SPLIT)
 	Send("!f")
 	If WinWaitActive("Вид основного словаря", "", 5) Then
 		ClipMan($srch)
+
 		Send("{ENTER}")
 		If WinWaitActive($IrbisTit, "", 5) Then
 			Sleep(100)
 			Send("!d")
 			Sleep(100)
-			$string = ""
-			_WinAPI_SetKeyboardLayout(WinGetHandle(AutoItWinGetTitle()), 0x0419)
-			For $i = 2 To $SPLIT[0]
-				If $i == $SPLIT[0] Then
-					$string = $string & $SPLIT[$i]
-				Else
-					$string = $string & $SPLIT[$i] & ' '
-				EndIf
-			Next
-			_WinAPI_SetKeyboardLayout(WinGetHandle(AutoItWinGetTitle()), 0x0409)
-			Sleep(100)
-			ClipMan($string)
-			Send("{ENTER}")
+
+			If $SPLIT <> 0 Then
+				$string = ""
+
+				For $i = 2 To $SPLIT[0]
+					If $i == $SPLIT[0] Then
+						$string = $string & $SPLIT[$i]
+					Else
+						$string = $string & $SPLIT[$i] & ' '
+					EndIf
+				Next
+
+				Sleep(100)
+				ClipMan($string)
+				Send("{ENTER}")
+			EndIf
 		EndIf
 	EndIf
 
@@ -1326,8 +1329,10 @@ EndFunc   ;==>SrchforEx
 ;~ Использование буфера обмена с сохранением текущего состояния буфера
 Func ClipMan($com)
 	$clip = ClipGet()
+	Sleep(100)
 	ClipPut($com)
 	Send("+{INS}")
+	Sleep(100)
 	ClipPut($clip)
 EndFunc   ;==>ClipMan
 
@@ -1504,11 +1509,22 @@ Func Print()
 				ControlClick("Внимание", "", "[CLASS:Button; INSTANCE:1]")
 			EndIf
 			If $macro <> '' Then
+
 				$hWnd1 = WinWaitActive("[CLASS:OpusApp]", "", 10)
 				If $hWnd1 Then
 					WinClose("Печать")
-					$Object = ObjGet("", "Word.Application")
-					$Object.Run($macro)
+					$second = 0
+;~ 					Do
+					$Object = ObjGet("", "Word.Application") ; Get an existing Excel Object
+					If @error Then
+						MsgBox($MB_SYSTEMMODAL, "", "Word File Test" & @CRLF & "Error Getting an active Word Object. Error code: " & Hex(@error, 8))
+						Return False
+					Else
+						$Object.Run($macro)
+;~ 							$second = $second + 1
+;~ 							Sleep(1000)
+					EndIf
+;~ 					Until ($second < 5 Or @error)
 				EndIf
 			Else
 				WinClose("Печать")
@@ -1520,17 +1536,77 @@ EndFunc   ;==>Print
 ;~ Отключение сочетаний клавиш в других приложениях
 Func HotKeyOn($send, $func)
 	If WinGetHandle("[ACTIVE]") == WinGetHandle($IrbisTit) Then
-
-;~ 		Предотвращение залипания CTRL'a
-		Sleep(10)
-		Send("{CTRLDOWN}")
-		Sleep(10)
-		Send("{CTRLUP}")
 		Return True
 	Else
 		HotKeySet($send)
+		Sleep(100)
 		Send($send)
+		Sleep(100)
 		HotKeySet($send, $func)
 		Return False
 	EndIf
 EndFunc   ;==>HotKeyOn
+
+Func ChangeBase($base)
+	Send("!b")
+	$hWnd = WinWaitActive("Список доступных БД", "", 5)
+	If $hWnd Then
+		ClipMan($base)
+		Send("{ENTER}")
+	EndIf
+EndFunc   ;==>ChangeBase
+
+Func _SendEx($sSendKeys, $hUser32Dll = "", $iTimeout = 2000, $sReleaseKeys = "0x10,0x11,0x12,0x5B,0x5C")
+    Local $bCloseDll, $sRet
+    Local $iDelay = Opt("SendKeyDelay") + Opt("SendKeyDownDelay")
+    If $iDelay < 50 Then $iDelay = 50
+    Local $aReleaseKeys = StringSplit($sReleaseKeys, ",")
+    If @error Then Return SetError(1, 0, "Failed to create release key array")
+    If $hUser32Dll <> "user32.dll" Then
+        $hUser32Dll = DllOpen("user32.dll")
+        If @error Then Return SetError(1, 0, "Failed to open handle to user32.dll")
+        $bCloseDll = True
+    EndIf
+    $sRet = __ReleaseKeys($aReleaseKeys, $iTimeout, $hUser32Dll)
+    If Not @error Then
+        Send($sSendKeys)
+        Sleep($iDelay)
+        $sRet = __ReleaseKeys($aReleaseKeys, $iTimeout, $hUser32Dll)
+    EndIf
+    If $bCloseDll Then DllClose("user32.dll")
+    If $sRet Then Return SetError(1, 0, $sRet)
+    Return 1
+EndFunc
+
+; #INTERNAL_USE_ONLY# ===========================================================================================================
+; Name ..........: __ReleaseKeys
+; Description ...: release pressed keys
+; Syntax ........: __ReleaseKeys(Byref $aReleaseKeys, $iTimeout, $hUser32Dll)
+; Parameters ....: $aReleaseKeys        - [in/out] An array of unknowns.
+;                  $iTimeout            - An integer value.
+;                  $hUser32Dll          - A handle value.
+; Return values .: None
+; Author ........: iCode
+; Modified ......: 25-May-2014
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......: No
+; ===============================================================================================================================
+Func __ReleaseKeys(ByRef $aReleaseKeys, $iTimeout, $hUser32Dll)
+    If $iTimeout < 50 Then $iTimeout = 250
+    Local $aRet, $hTimer = TimerInit()
+    For $i = 0 To UBound($aReleaseKeys) - 1
+        $aRet = DllCall($hUser32Dll, "short", "GetAsyncKeyState", "int", $aReleaseKeys[$i])
+        If @error Then Return SetError(1, 0, "Dll call GetAsyncKeyState failed with key: " & $aReleaseKeys[$i])
+        If BitAND($aRet[0], 0x8000) <> 0 Then
+            Do
+                Sleep(100)
+                DllCall($hUser32Dll, "int", "keybd_event", "int", $aReleaseKeys[$i], "int", 0, "long", 2, "long", 0)
+                If @error Then Return SetError(1, 0, "Dll call keybd_event failed with key: " & $aReleaseKeys[$i])
+                $aRet = DllCall($hUser32Dll, "short", "GetAsyncKeyState", "int", $aReleaseKeys[$i])
+                If TimerDiff($hTimer) >= $iTimeout Then Return SetError(1, 0, "Time out limit reached")
+            Until BitAND($aRet[0], 0x8000) = 0
+        EndIf
+    Next
+EndFunc
